@@ -4,14 +4,9 @@
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-export interface Environment {
-  local: string;
-  production: string;
-}
-
 export interface QueryParam {
   key: string;
-  value: string;
+  type: string;
   required: boolean;
   description?: string;
 }
@@ -20,8 +15,8 @@ export interface RequestField {
   key: string;
   type: 'string' | 'number' | 'boolean' | 'object' | 'array';
   required: boolean;
+  defaultValue?: string;
   description?: string;
-  children?: RequestField[];
 }
 
 export interface ResponseMapping {
@@ -36,7 +31,7 @@ export interface ApiDefinition {
   projectId: string;
   name: string;
   description?: string;
-  environments: Environment;
+  overrideBaseUrl?: string;
   endpoint: string;
   method: HttpMethod;
   headers: Record<string, string>;
@@ -53,6 +48,8 @@ export interface Project {
   id: string;
   name: string;
   description?: string;
+  localBaseUrl: string;
+  productionBaseUrl: string;
   createdAt: Date;
   updatedAt: Date;
 }

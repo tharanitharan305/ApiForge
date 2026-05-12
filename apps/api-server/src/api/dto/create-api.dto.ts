@@ -10,6 +10,7 @@ import {
   MaxLength,
   MinLength,
   Min,
+  IsUrl,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -21,20 +22,12 @@ enum HttpMethod {
   DELETE = 'DELETE',
 }
 
-class EnvironmentDto {
-  @IsString()
-  local: string;
-
-  @IsString()
-  production: string;
-}
-
 class QueryParamDto {
   @IsString()
   key: string;
 
   @IsString()
-  value: string;
+  type: string;
 
   @IsBoolean()
   required: boolean;
@@ -56,13 +49,11 @@ class RequestFieldDto {
 
   @IsString()
   @IsOptional()
-  description?: string;
+  defaultValue?: string;
 
-  @IsArray()
+  @IsString()
   @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => RequestFieldDto)
-  children?: RequestFieldDto[];
+  description?: string;
 }
 
 class ResponseMappingDto {
@@ -91,9 +82,9 @@ export class CreateApiDto {
   @MaxLength(500)
   description?: string;
 
-  @ValidateNested()
-  @Type(() => EnvironmentDto)
-  environments: EnvironmentDto;
+  @IsString()
+  @IsOptional()
+  overrideBaseUrl?: string;
 
   @IsString()
   @MinLength(1)

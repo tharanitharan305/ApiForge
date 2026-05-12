@@ -19,8 +19,9 @@ export class ExportService {
     projectId: string,
     languages: string[],
   ): Promise<Readable> {
-    // Get project and APIs
-    const project = await this.projectService.findOne(projectId, 'mock-user');
+    // Get project and APIs (using mock user ID for v1)
+    const MOCK_USER_ID = '00000000-0000-0000-0000-000000000000';
+    const project = await this.projectService.findOne(projectId, MOCK_USER_ID);
     const apis = await this.apiService.findAll(projectId);
 
     // Transform Prisma models to ApiDefinition format
@@ -29,10 +30,7 @@ export class ExportService {
       projectId: api.projectId,
       name: api.name,
       description: api.description || undefined,
-      environments: {
-        local: api.localUrl,
-        production: api.productionUrl,
-      },
+      overrideBaseUrl: api.overrideBaseUrl || undefined,
       endpoint: api.endpoint,
       method: api.method as any,
       headers: api.headers as Record<string, string>,
@@ -51,6 +49,7 @@ export class ExportService {
     for (const language of languages) {
       const files = await this.generatorService.generateForLanguage(
         language,
+        project,
         apiDefinitions,
       );
 
@@ -68,6 +67,8 @@ export class ExportService {
         id: project.id,
         name: project.name,
         description: project.description,
+        localBaseUrl: project.localBaseUrl,
+        productionBaseUrl: project.productionBaseUrl,
       },
       apis: apiDefinitions,
       exportedAt: new Date().toISOString(),
@@ -92,7 +93,8 @@ export class ExportService {
   }
 
   async exportConfig(projectId: string) {
-    const project = await this.projectService.findOne(projectId, 'mock-user');
+    const MOCK_USER_ID = '00000000-0000-0000-0000-000000000000';
+    const project = await this.projectService.findOne(projectId, MOCK_USER_ID);
     const apis = await this.apiService.findAll(projectId);
 
     return {
@@ -100,15 +102,14 @@ export class ExportService {
         id: project.id,
         name: project.name,
         description: project.description,
+        localBaseUrl: project.localBaseUrl,
+        productionBaseUrl: project.productionBaseUrl,
       },
       apis: apis.map((api) => ({
         id: api.id,
         name: api.name,
         description: api.description,
-        environments: {
-          local: api.localUrl,
-          production: api.productionUrl,
-        },
+        overrideBaseUrl: api.overrideBaseUrl,
         endpoint: api.endpoint,
         method: api.method,
         headers: api.headers,
@@ -124,8 +125,9 @@ export class ExportService {
   }
 
   async importConfig(projectId: string, config: any) {
+    const MOCK_USER_ID = '00000000-0000-0000-0000-000000000000';
     // Validate project exists
-    await this.projectService.findOne(projectId, 'mock-user');
+    await this.projectService.findOne(projectId, MOCK_USER_ID);
 
     // Delete existing APIs
     await this.prisma.api.deleteMany({
@@ -140,8 +142,7 @@ export class ExportService {
           projectId,
           name: apiConfig.name,
           description: apiConfig.description,
-          localUrl: apiConfig.environments.local,
-          productionUrl: apiConfig.environments.production,
+          overrideBaseUrl: apiConfig.overrideBaseUrl,
           endpoint: apiConfig.endpoint,
           method: apiConfig.method,
           headers: apiConfig.headers || {},

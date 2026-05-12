@@ -6,79 +6,89 @@
 
 const axios = require('axios');
 
-let axiosInstance = null;
-
-function getAxiosInstance() {
-  if (!axiosInstance) {
-    axiosInstance = axios.create({
-      baseURL: process.env.NODE_ENV === 'production' 
-        ? '{{environments.production}}'
-        : '{{environments.local}}',
-      timeout: {{or timeout 30000}},
-      headers: {
-        'Content-Type': 'application/json',
-        {{#each headers}}
-        '{{@key}}': '{{this}}',
-        {{/each}}
-      },
-    });
-  }
-  return axiosInstance;
-}
-
 /**
- * {{name}} - {{method}} {{endpoint}}
- {{#if description}}* {{description}}{{/if}}
+ * {{pascalCase name}} API Service
  */
-async function {{camelCase name}}({{#if requestBody.length}}request, {{/if}}{{#if queryParams.length}}params, {{/if}}config) {
-  try {
-    const instance = getAxiosInstance();
-    
-    const response = await instance.{{lowercase method}}(
-      '{{endpoint}}'{{#if requestBody.length}},
-      request{{/if}}{{#if queryParams.length}},
-      { ...config, params }{{else}}{{#unless requestBody.length}},
-      config{{/unless}}{{/if}}
-    );
+class {{pascalCase name}} {
+  static axiosInstance = null;
 
-    return normalizeResponse(response);
-  } catch (error) {
-    if (error.response) {
-      return normalizeResponse(error.response);
+  static getAxiosInstance() {
+    if (!this.axiosInstance) {
+      const baseURL = {{#if overrideBaseUrl}}'{{overrideBaseUrl}}'{{else}}process.env.NODE_ENV === 'production' 
+          ? '{{project.productionBaseUrl}}'
+          : '{{project.localBaseUrl}}'{{/if}};
+      
+      this.axiosInstance = axios.create({
+        baseURL,
+        timeout: {{or timeout 30000}},
+        headers: {
+          'Content-Type': 'application/json',
+          {{#each headers}}
+          '{{@key}}': '{{this}}',
+          {{/each}}
+        },
+      });
     }
+    return this.axiosInstance;
+  }
+
+  /**
+   * {{name}} - {{method}} {{endpoint}}
+   {{#if description}}* {{description}}{{/if}}
+   {{#if requestBody.length}}* @param {Object} body - Request body{{/if}}
+   {{#if queryParams.length}}* @param {Object} params - Query parameters{{/if}}
+   * @param {Object} config - Axios config
+   * @returns {Promise<Object>} Normalized response
+   */
+  static async {{camelCase name}}({{#if requestBody.length}}body{{#if queryParams.length}}, {{/if}}{{/if}}{{#if queryParams.length}}params{{/if}}{{#if (or requestBody.length queryParams.length)}}, {{/if}}config) {
+    try {
+      const instance = this.getAxiosInstance();
+      
+      const response = await instance.{{lowercase method}}(
+        '{{endpoint}}'{{#if requestBody.length}},
+        body{{/if}}{{#if queryParams.length}},
+        { ...config, params }{{else}}{{#if requestBody.length}},
+        config{{else}},
+        config{{/if}}{{/if}}
+      );
+
+      return this.normalizeResponse(response);
+    } catch (error) {
+      if (error.response) {
+        return this.normalizeResponse(error.response);
+      }
+      
+      return {
+        success: false,
+        statusCode: 0,
+        message: error.message || 'Network error',
+        data: null,
+        raw: error,
+      };
+    }
+  }
+
+  static normalizeResponse(response) {
+    const data = response.data;
     
+    // Extract values using response mapping paths
+    const success = this.getValueByPath(data, '{{responseMapping.successPath}}') ?? (response.status >= 200 && response.status < 300);
+    const message = this.getValueByPath(data, '{{responseMapping.messagePath}}') ?? response.statusText;
+    const responseData = this.getValueByPath(data, '{{responseMapping.dataPath}}') ?? data;
+    const statusCode = {{#if responseMapping.statusCodePath}}this.getValueByPath(data, '{{responseMapping.statusCodePath}}') ?? {{/if}}response.status;
+
     return {
-      success: false,
-      statusCode: 0,
-      message: error.message || 'Network error',
-      data: null,
-      raw: error,
+      success: Boolean(success),
+      statusCode: Number(statusCode),
+      message: String(message),
+      data: responseData,
+      raw: data,
     };
   }
+
+  static getValueByPath(obj, path) {
+    return path.split('.').reduce((current, key) => current?.[key], obj);
+  }
 }
 
-function normalizeResponse(response) {
-  const data = response.data;
-  
-  // Extract values using response mapping paths
-  const success = getValueByPath(data, '{{responseMapping.successPath}}') ?? (response.status >= 200 && response.status < 300);
-  const message = getValueByPath(data, '{{responseMapping.messagePath}}') ?? response.statusText;
-  const responseData = getValueByPath(data, '{{responseMapping.dataPath}}') ?? data;
-  const statusCode = {{#if responseMapping.statusCodePath}}getValueByPath(data, '{{responseMapping.statusCodePath}}') ?? {{/if}}response.status;
-
-  return {
-    success: Boolean(success),
-    statusCode: Number(statusCode),
-    message: String(message),
-    data: responseData,
-    raw: data,
-  };
-}
-
-function getValueByPath(obj, path) {
-  return path.split('.').reduce((current, key) => current?.[key], obj);
-}
-
-module.exports = {
-  {{camelCase name}},
-};
+module.exports = { {{pascalCase name}} };

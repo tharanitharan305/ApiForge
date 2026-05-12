@@ -18,25 +18,35 @@ class NormalizedResponse(TypedDict):
 
 
 {{#if requestBody.length}}
-class {{pascalCase name}}Request(TypedDict{{#unless (hasRequired requestBody)}}, total=False{{/unless}}):
+class {{pascalCase name}}Body(TypedDict{{#unless (hasRequired requestBody)}}, total=False{{/unless}}):
+    """Request body for {{name}}"""
 {{#each requestBody}}
-    {{snake_case key}}: {{#eq type 'string'}}str{{/eq}}{{#eq type 'number'}}float{{/eq}}{{#eq type 'boolean'}}bool{{/eq}}{{#eq type 'object'}}Dict[str, Any]{{/eq}}{{#eq type 'array'}}list{{/eq}}
+    {{snake_case key}}: {{pythonType type}}
+{{/each}}
+{{/if}}
+
+{{#if queryParams.length}}
+class {{pascalCase name}}Params(TypedDict, total=False):
+    """Query parameters for {{name}}"""
+{{#each queryParams}}
+    {{snake_case key}}: str
 {{/each}}
 {{/if}}
 
 
-class {{pascalCase name}}Api:
+class {{pascalCase name}}:
+    """{{pascalCase name}} API Service"""
     _session: Optional[requests.Session] = None
     
     @classmethod
     def _get_session(cls) -> requests.Session:
         if cls._session is None:
             cls._session = requests.Session()
-            base_url = (
-                '{{environments.production}}'
+            base_url = {{#if overrideBaseUrl}}'{{overrideBaseUrl}}'{{else}}(
+                '{{project.productionBaseUrl}}'
                 if os.getenv('ENV') == 'production'
-                else '{{environments.local}}'
-            )
+                else '{{project.localBaseUrl}}'
+            ){{/if}}
             cls._session.headers.update({
                 'Content-Type': 'application/json',
                 {{#each headers}}
@@ -48,8 +58,8 @@ class {{pascalCase name}}Api:
     @classmethod
     def {{snake_case name}}(
         cls,
-        {{#if requestBody.length}}request: {{pascalCase name}}Request,{{/if}}
-        {{#if queryParams.length}}params: Optional[Dict[str, str]] = None,{{/if}}
+        {{#if requestBody.length}}body: {{pascalCase name}}Body{{#if queryParams.length}},{{/if}}{{/if}}
+        {{#if queryParams.length}}params: Optional[{{pascalCase name}}Params] = None{{/if}}{{#if (or requestBody.length queryParams.length)}},{{/if}}
         **kwargs
     ) -> NormalizedResponse:
         """
@@ -58,16 +68,16 @@ class {{pascalCase name}}Api:
         """
         try:
             session = cls._get_session()
-            base_url = (
-                '{{environments.production}}'
+            base_url = {{#if overrideBaseUrl}}'{{overrideBaseUrl}}'{{else}}(
+                '{{project.productionBaseUrl}}'
                 if os.getenv('ENV') == 'production'
-                else '{{environments.local}}'
-            )
+                else '{{project.localBaseUrl}}'
+            ){{/if}}
             url = f"{base_url}{{endpoint}}"
             
             response = session.{{lowercase method}}(
                 url,
-                {{#if requestBody.length}}json=request,{{/if}}
+                {{#if requestBody.length}}json=body,{{/if}}
                 {{#if queryParams.length}}params=params,{{/if}}
                 timeout={{or timeout 30}},
                 **kwargs
@@ -95,22 +105,22 @@ class {{pascalCase name}}Api:
         
         # Extract values using response mapping paths
         success = (
-            {{pascalCase name}}Api._get_value_by_path(data, '{{responseMapping.successPath}}')
+            {{pascalCase name}}._get_value_by_path(data, '{{responseMapping.successPath}}')
             if isinstance(data, dict)
             else (200 <= response.status_code < 300)
         )
         message = (
-            {{pascalCase name}}Api._get_value_by_path(data, '{{responseMapping.messagePath}}')
+            {{pascalCase name}}._get_value_by_path(data, '{{responseMapping.messagePath}}')
             if isinstance(data, dict)
             else response.reason
         )
         response_data = (
-            {{pascalCase name}}Api._get_value_by_path(data, '{{responseMapping.dataPath}}')
+            {{pascalCase name}}._get_value_by_path(data, '{{responseMapping.dataPath}}')
             if isinstance(data, dict)
             else data
         )
         status_code = {{#if responseMapping.statusCodePath}}(
-            {{pascalCase name}}Api._get_value_by_path(data, '{{responseMapping.statusCodePath}}')
+            {{pascalCase name}}._get_value_by_path(data, '{{responseMapping.statusCodePath}}')
             if isinstance(data, dict)
             else response.status_code
         ){{else}}response.status_code{{/if}}

@@ -1,7 +1,25 @@
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { BaseGenerator } from '@apiforge/generator-core';
 import { ApiDefinition, GeneratedFile } from '@apiforge/core';
+
+// Find project root (where templates folder is)
+const findProjectRoot = () => {
+  let currentPath = __dirname;
+  // Go up until we find the templates folder
+  for (let i = 0; i < 10; i++) {
+    currentPath = resolve(currentPath, '..');
+    try {
+      const templatesPath = join(currentPath, 'templates');
+      if (require('fs').existsSync(templatesPath)) {
+        return currentPath;
+      }
+    } catch (e) {
+      // Continue searching
+    }
+  }
+  return process.cwd();
+};
 
 export class TypeScriptGenerator extends BaseGenerator {
   language = 'typescript';
@@ -12,18 +30,20 @@ export class TypeScriptGenerator extends BaseGenerator {
 
   constructor() {
     super();
+    const projectRoot = findProjectRoot();
+    const templatesPath = join(projectRoot, 'templates/typescript');
     this.apiTemplate = readFileSync(
-      join(__dirname, '../../../templates/typescript/api.hbs'),
+      join(templatesPath, 'api.hbs'),
       'utf-8',
     );
     this.indexTemplate = readFileSync(
-      join(__dirname, '../../../templates/typescript/index.hbs'),
+      join(templatesPath, 'index.hbs'),
       'utf-8',
     );
   }
 
-  async generateApi(api: ApiDefinition): Promise<GeneratedFile> {
-    const content = this.renderTemplate(this.apiTemplate, api);
+  async generateApi(api: ApiDefinition, project: any): Promise<GeneratedFile> {
+    const content = this.renderTemplate(this.apiTemplate, { ...api, project });
     const filename = this.getFilename(api.name);
 
     return {

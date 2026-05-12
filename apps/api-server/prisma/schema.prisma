@@ -21,15 +21,17 @@ model User {
 }
 
 model Project {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  apis        Api[]
-  exports     Export[]
+  id              String   @id @default(uuid())
+  name            String
+  description     String?
+  localBaseUrl    String   // Project-level local base URL
+  productionBaseUrl String // Project-level production base URL
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  apis            Api[]
+  exports         Export[]
 
   @@index([userId])
   @@map("projects")
@@ -42,9 +44,8 @@ model Api {
   name        String
   description String?
   
-  // Environments
-  localUrl       String
-  productionUrl  String
+  // Optional base URL override (if not set, use project defaults)
+  overrideBaseUrl String?
   
   // Request configuration
   endpoint       String

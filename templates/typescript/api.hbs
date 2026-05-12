@@ -15,22 +15,41 @@ interface NormalizedResponse<T = any> {
 }
 
 {{#if requestBody.length}}
-interface {{pascalCase name}}Request {
+/**
+ * Request body for {{name}}
+ */
+export interface {{pascalCase name}}Body {
 {{#each requestBody}}
-  {{key}}{{#unless required}}?{{/unless}}: {{#eq type 'string'}}string{{/eq}}{{#eq type 'number'}}number{{/eq}}{{#eq type 'boolean'}}boolean{{/eq}}{{#eq type 'object'}}any{{/eq}}{{#eq type 'array'}}any[]{{/eq}};
+  {{key}}{{#unless required}}?{{/unless}}: {{tsType type}};
 {{/each}}
 }
 {{/if}}
 
-export class {{pascalCase name}}Api {
+{{#if queryParams.length}}
+/**
+ * Query parameters for {{name}}
+ */
+export interface {{pascalCase name}}Params {
+{{#each queryParams}}
+  {{key}}{{#unless required}}?{{/unless}}: string;
+{{/each}}
+}
+{{/if}}
+
+/**
+ * {{pascalCase name}} API Service
+ */
+export class {{pascalCase name}} {
   private static axiosInstance: AxiosInstance;
 
   private static getAxiosInstance(): AxiosInstance {
     if (!this.axiosInstance) {
+      const baseURL = {{#if overrideBaseUrl}}'{{overrideBaseUrl}}'{{else}}process.env.NODE_ENV === 'production' 
+          ? '{{project.productionBaseUrl}}'
+          : '{{project.localBaseUrl}}'{{/if}};
+      
       this.axiosInstance = axios.create({
-        baseURL: process.env.NODE_ENV === 'production' 
-          ? '{{environments.production}}'
-          : '{{environments.local}}',
+        baseURL,
         timeout: {{or timeout 30000}},
         headers: {
           'Content-Type': 'application/json',
@@ -47,9 +66,9 @@ export class {{pascalCase name}}Api {
    * {{name}} - {{method}} {{endpoint}}
    {{#if description}}* {{description}}{{/if}}
    */
-  static async {{camelCase name}}(
-    {{#if requestBody.length}}request: {{pascalCase name}}Request,{{/if}}
-    {{#if queryParams.length}}params?: { {{#each queryParams}}{{key}}{{#unless required}}?{{/unless}}: string{{#unless @last}}, {{/unless}}{{/each}} },{{/if}}
+  static async {{camelCase name}}({{#if requestBody.length}}
+    body: {{pascalCase name}}Body{{#if queryParams.length}},{{/if}}{{/if}}{{#if queryParams.length}}
+    params?: {{pascalCase name}}Params{{/if}}{{#if (or requestBody.length queryParams.length)}},{{/if}}
     config?: AxiosRequestConfig
   ): Promise<NormalizedResponse> {
     try {
@@ -57,9 +76,10 @@ export class {{pascalCase name}}Api {
       
       const response: AxiosResponse = await instance.{{lowercase method}}(
         '{{endpoint}}'{{#if requestBody.length}},
-        request{{/if}}{{#if queryParams.length}},
-        { ...config, params }{{else}}{{#unless requestBody.length}},
-        config{{/unless}}{{/if}}
+        body{{/if}}{{#if queryParams.length}},
+        { ...config, params }{{else}}{{#if requestBody.length}},
+        config{{else}},
+        config{{/if}}{{/if}}
       );
 
       return this.normalizeResponse(response);

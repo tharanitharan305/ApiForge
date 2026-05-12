@@ -17,6 +17,8 @@ import { Textarea } from "@/components/ui/textarea";
 const projectSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   description: z.string().max(500).optional(),
+  localBaseUrl: z.string().url("Must be a valid URL"),
+  productionBaseUrl: z.string().url("Must be a valid URL"),
 });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
@@ -78,6 +80,34 @@ export function CreateProjectDialog({
             {errors.description && (
               <p className="text-sm text-destructive mt-1">
                 {errors.description.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="localBaseUrl">Local Base URL</Label>
+            <Input
+              id="localBaseUrl"
+              {...register("localBaseUrl")}
+              placeholder="http://localhost:3000"
+            />
+            {errors.localBaseUrl && (
+              <p className="text-sm text-destructive mt-1">
+                {errors.localBaseUrl.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="productionBaseUrl">Production Base URL</Label>
+            <Input
+              id="productionBaseUrl"
+              {...register("productionBaseUrl")}
+              placeholder="https://api.example.com"
+            />
+            {errors.productionBaseUrl && (
+              <p className="text-sm text-destructive mt-1">
+                {errors.productionBaseUrl.message}
               </p>
             )}
           </div>

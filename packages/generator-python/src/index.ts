@@ -1,8 +1,25 @@
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { BaseGenerator } from '@apiforge/generator-core';
 import { ApiDefinition, GeneratedFile } from '@apiforge/core';
 import { toSnakeCase } from '@apiforge/shared-utils';
+
+// Find project root (where templates folder is)
+const findProjectRoot = () => {
+  let currentPath = __dirname;
+  for (let i = 0; i < 10; i++) {
+    currentPath = resolve(currentPath, '..');
+    try {
+      const templatesPath = join(currentPath, 'templates');
+      if (require('fs').existsSync(templatesPath)) {
+        return currentPath;
+      }
+    } catch (e) {
+      // Continue searching
+    }
+  }
+  return process.cwd();
+};
 
 export class PythonGenerator extends BaseGenerator {
   language = 'python';
@@ -20,18 +37,20 @@ export class PythonGenerator extends BaseGenerator {
       return fields.some((f) => f.required);
     });
     
+    const projectRoot = findProjectRoot();
+    const templatesPath = join(projectRoot, 'templates/python');
     this.apiTemplate = readFileSync(
-      join(__dirname, '../../../templates/python/api.hbs'),
+      join(templatesPath, 'api.hbs'),
       'utf-8',
     );
     this.indexTemplate = readFileSync(
-      join(__dirname, '../../../templates/python/index.hbs'),
+      join(templatesPath, 'index.hbs'),
       'utf-8',
     );
   }
 
-  async generateApi(api: ApiDefinition): Promise<GeneratedFile> {
-    const content = this.renderTemplate(this.apiTemplate, api);
+  async generateApi(api: ApiDefinition, project: any): Promise<GeneratedFile> {
+    const content = this.renderTemplate(this.apiTemplate, { ...api, project });
     const filename = `${toSnakeCase(api.name)}_api.${this.fileExtension}`;
 
     return {

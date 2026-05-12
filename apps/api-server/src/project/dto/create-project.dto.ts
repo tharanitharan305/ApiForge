@@ -10,4 +10,10 @@ export class CreateProjectDto {
   @IsOptional()
   @MaxLength(500)
   description?: string;
+
+  @IsString()
+  localBaseUrl: string;
+
+  @IsString()
+  productionBaseUrl: string;
 }

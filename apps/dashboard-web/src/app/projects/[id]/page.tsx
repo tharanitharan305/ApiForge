@@ -41,11 +41,14 @@ export default function ProjectPage() {
 
   const handleCreateApi = async (data: any) => {
     try {
+      console.log("Creating API with data:", data);
       await api.apis.create(projectId, data);
       setCreateDialogOpen(false);
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create API:", error);
+      const errorMessage = error.response?.data?.message || error.message;
+      alert(`Failed to create API: ${JSON.stringify(errorMessage)}`);
     }
   };
 

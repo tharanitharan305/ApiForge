@@ -18,6 +18,7 @@ export class GeneratorService implements OnModuleInit {
 
   async generateForLanguage(
     language: string,
+    project: any,
     apis: ApiDefinition[],
   ): Promise<GeneratedFile[]> {
     const generator = generatorRegistry.get(language);
@@ -30,7 +31,7 @@ export class GeneratorService implements OnModuleInit {
 
     // Generate individual API files
     for (const api of apis) {
-      const file = await generator.generateApi(api);
+      const file = await generator.generateApi(api, project);
       files.push(file);
     }
 
@@ -42,13 +43,14 @@ export class GeneratorService implements OnModuleInit {
   }
 
   async generateForAllLanguages(
+    project: any,
     apis: ApiDefinition[],
   ): Promise<Record<string, GeneratedFile[]>> {
     const languages = generatorRegistry.getSupportedLanguages();
     const result: Record<string, GeneratedFile[]> = {};
 
     for (const language of languages) {
-      result[language] = await this.generateForLanguage(language, apis);
+      result[language] = await this.generateForLanguage(language, project, apis);
     }
 
     return result;

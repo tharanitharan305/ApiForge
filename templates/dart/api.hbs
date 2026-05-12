@@ -23,33 +23,68 @@ class NormalizedResponse<T> {
 }
 
 {{#if requestBody.length}}
-class {{pascalCase name}}Request {
+/// Request body for {{name}}
+class {{pascalCase name}}Body {
 {{#each requestBody}}
-  final {{#eq type 'string'}}String{{/eq}}{{#eq type 'number'}}num{{/eq}}{{#eq type 'boolean'}}bool{{/eq}}{{#eq type 'object'}}Map<String, dynamic>{{/eq}}{{#eq type 'array'}}List<dynamic>{{/eq}}{{#unless required}}?{{/unless}} {{camelCase key}};
+  final {{dartType type}}{{#unless required}}?{{/unless}} {{key}};
 {{/each}}
 
-  {{pascalCase name}}Request({
+  {{pascalCase name}}Body({
 {{#each requestBody}}
-    {{#if required}}required {{/if}}this.{{camelCase key}},
+    {{#if required}}required {{/if}}this.{{key}},
 {{/each}}
   });
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJson() {
+    return {
 {{#each requestBody}}
-    '{{key}}': {{camelCase key}},
+      '{{key}}': {{key}},
 {{/each}}
-  };
+    };
+  }
+
+  factory {{pascalCase name}}Body.fromJson(Map<String, dynamic> json) {
+    return {{pascalCase name}}Body(
+{{#each requestBody}}
+      {{key}}: json['{{key}}'],
+{{/each}}
+    );
+  }
 }
 {{/if}}
 
-class {{pascalCase name}}Api {
+{{#if queryParams.length}}
+/// Query parameters for {{name}}
+class {{pascalCase name}}Params {
+{{#each queryParams}}
+  final String{{#unless required}}?{{/unless}} {{key}};
+{{/each}}
+
+  {{pascalCase name}}Params({
+{{#each queryParams}}
+    {{#if required}}required {{/if}}this.{{key}},
+{{/each}}
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+{{#each queryParams}}
+      if ({{key}} != null) '{{key}}': {{key}},
+{{/each}}
+    };
+  }
+}
+{{/if}}
+
+/// {{pascalCase name}} API Service
+class {{pascalCase name}} {
   static Dio? _dio;
 
   static Dio _getDio() {
     if (_dio == null) {
-      final baseUrl = const String.fromEnvironment('ENV') == 'production'
-          ? '{{environments.production}}'
-          : '{{environments.local}}';
+      final baseUrl = {{#if overrideBaseUrl}}'{{overrideBaseUrl}}'{{else}}const String.fromEnvironment('ENV') == 'production'
+          ? '{{project.productionBaseUrl}}'
+          : '{{project.localBaseUrl}}'{{/if}};
 
       _dio = Dio(BaseOptions(
         baseUrl: baseUrl,
@@ -68,17 +103,19 @@ class {{pascalCase name}}Api {
 
   /// {{name}} - {{method}} {{endpoint}}
   {{#if description}}/// {{description}}{{/if}}
-  static Future<NormalizedResponse> {{camelCase name}}({{#if requestBody.length}}
-    {{pascalCase name}}Request request,{{/if}}{{#if queryParams.length}}
-    Map<String, dynamic>? queryParameters,{{/if}}
-  ) async {
+  static Future<NormalizedResponse> {{camelCase name}}({{#if requestBody.length}}{
+    required {{pascalCase name}}Body body{{#if queryParams.length}},{{/if}}{{/if}}{{#if queryParams.length}}
+    {{pascalCase name}}Params? params{{/if}}{{#if (or requestBody.length queryParams.length)}},{{/if}}
+    Options? options,
+  }) async {
     try {
       final dio = _getDio();
-      
+
       final response = await dio.{{lowercase method}}(
         '{{endpoint}}',
-        {{#if requestBody.length}}data: request.toJson(),{{/if}}
-        {{#if queryParams.length}}queryParameters: queryParameters,{{/if}}
+        {{#if requestBody.length}}data: body.toJson(),{{/if}}
+        {{#if queryParams.length}}queryParameters: params?.toMap(),{{/if}}
+        options: options,
       );
 
       return _normalizeResponse(response);
@@ -86,19 +123,11 @@ class {{pascalCase name}}Api {
       if (e.response != null) {
         return _normalizeResponse(e.response!);
       }
-      
+
       return NormalizedResponse(
         success: false,
         statusCode: 0,
         message: e.message ?? 'Network error',
-        data: null,
-        raw: e,
-      );
-    } catch (e) {
-      return NormalizedResponse(
-        success: false,
-        statusCode: 0,
-        message: e.toString(),
         data: null,
         raw: e,
       );
@@ -107,10 +136,10 @@ class {{pascalCase name}}Api {
 
   static NormalizedResponse _normalizeResponse(Response response) {
     final data = response.data;
-    
+
     // Extract values using response mapping paths
-    final success = _getValueByPath(data, '{{responseMapping.successPath}}') ?? 
-                   (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300);
+    final success = _getValueByPath(data, '{{responseMapping.successPath}}') ??
+        (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300);
     final message = _getValueByPath(data, '{{responseMapping.messagePath}}') ?? response.statusMessage ?? '';
     final responseData = _getValueByPath(data, '{{responseMapping.dataPath}}') ?? data;
     final statusCode = {{#if responseMapping.statusCodePath}}_getValueByPath(data, '{{responseMapping.statusCodePath}}') ?? {{/if}}response.statusCode ?? 0;
@@ -127,7 +156,7 @@ class {{pascalCase name}}Api {
   static dynamic _getValueByPath(dynamic obj, String path) {
     final keys = path.split('.');
     dynamic current = obj;
-    
+
     for (final key in keys) {
       if (current is Map) {
         current = current[key];
@@ -135,7 +164,7 @@ class {{pascalCase name}}Api {
         return null;
       }
     }
-    
+
     return current;
   }
 }

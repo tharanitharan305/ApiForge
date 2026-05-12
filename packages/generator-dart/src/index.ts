@@ -1,8 +1,25 @@
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { BaseGenerator } from '@apiforge/generator-core';
 import { ApiDefinition, GeneratedFile } from '@apiforge/core';
 import { toSnakeCase } from '@apiforge/shared-utils';
+
+// Find project root (where templates folder is)
+const findProjectRoot = () => {
+  let currentPath = __dirname;
+  for (let i = 0; i < 10; i++) {
+    currentPath = resolve(currentPath, '..');
+    try {
+      const templatesPath = join(currentPath, 'templates');
+      if (require('fs').existsSync(templatesPath)) {
+        return currentPath;
+      }
+    } catch (e) {
+      // Continue searching
+    }
+  }
+  return process.cwd();
+};
 
 export class DartGenerator extends BaseGenerator {
   language = 'dart';
@@ -13,18 +30,20 @@ export class DartGenerator extends BaseGenerator {
 
   constructor() {
     super();
+    const projectRoot = findProjectRoot();
+    const templatesPath = join(projectRoot, 'templates/dart');
     this.apiTemplate = readFileSync(
-      join(__dirname, '../../../templates/dart/api.hbs'),
+      join(templatesPath, 'api.hbs'),
       'utf-8',
     );
     this.indexTemplate = readFileSync(
-      join(__dirname, '../../../templates/dart/index.hbs'),
+      join(templatesPath, 'index.hbs'),
       'utf-8',
     );
   }
 
-  async generateApi(api: ApiDefinition): Promise<GeneratedFile> {
-    const content = this.renderTemplate(this.apiTemplate, api);
+  async generateApi(api: ApiDefinition, project: any): Promise<GeneratedFile> {
+    const content = this.renderTemplate(this.apiTemplate, { ...api, project });
     const filename = `${toSnakeCase(api.name)}_api.${this.fileExtension}`;
 
     return {

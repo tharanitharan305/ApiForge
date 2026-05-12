@@ -9,8 +9,18 @@ export class ApiService {
   async create(projectId: string, dto: CreateApiDto) {
     return this.prisma.api.create({
       data: {
-        ...dto,
         projectId,
+        name: dto.name,
+        description: dto.description,
+        overrideBaseUrl: dto.overrideBaseUrl,
+        endpoint: dto.endpoint,
+        method: dto.method,
+        headers: dto.headers || {},
+        queryParams: (dto.queryParams || []) as any,
+        requestBody: (dto.requestBody || []) as any,
+        responseMapping: dto.responseMapping as any,
+        timeout: dto.timeout || 30000,
+        authRequired: dto.authRequired || false,
       },
     });
   }
@@ -39,9 +49,22 @@ export class ApiService {
   async update(id: string, projectId: string, dto: UpdateApiDto) {
     await this.findOne(id, projectId); // Check existence
 
+    const updateData: any = {};
+    if (dto.name !== undefined) updateData.name = dto.name;
+    if (dto.description !== undefined) updateData.description = dto.description;
+    if (dto.overrideBaseUrl !== undefined) updateData.overrideBaseUrl = dto.overrideBaseUrl;
+    if (dto.endpoint !== undefined) updateData.endpoint = dto.endpoint;
+    if (dto.method !== undefined) updateData.method = dto.method;
+    if (dto.headers !== undefined) updateData.headers = dto.headers;
+    if (dto.queryParams !== undefined) updateData.queryParams = dto.queryParams;
+    if (dto.requestBody !== undefined) updateData.requestBody = dto.requestBody;
+    if (dto.responseMapping !== undefined) updateData.responseMapping = dto.responseMapping;
+    if (dto.timeout !== undefined) updateData.timeout = dto.timeout;
+    if (dto.authRequired !== undefined) updateData.authRequired = dto.authRequired;
+
     return this.prisma.api.update({
       where: { id },
-      data: dto,
+      data: updateData,
     });
   }
 
