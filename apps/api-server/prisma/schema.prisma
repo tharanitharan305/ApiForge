@@ -1,0 +1,80 @@
+// Prisma schema for ApiForge
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  projects  Project[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  apis        Api[]
+  exports     Export[]
+
+  @@index([userId])
+  @@map("projects")
+}
+
+model Api {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  
+  // Environments
+  localUrl       String
+  productionUrl  String
+  
+  // Request configuration
+  endpoint       String
+  method         String // GET, POST, PUT, PATCH, DELETE
+  headers        Json   @default("{}")
+  queryParams    Json   @default("[]")
+  requestBody    Json   @default("[]")
+  
+  // Response configuration
+  responseMapping Json
+  
+  // Additional settings
+  timeout        Int     @default(30000)
+  authRequired   Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@map("apis")
+}
+
+model Export {
+  id         String   @id @default(uuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  config     Json
+  languages  String[] // Array of generated languages
+  createdAt  DateTime @default(now())
+
+  @@index([projectId])
+  @@map("exports")
+}

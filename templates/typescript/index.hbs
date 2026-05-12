@@ -1,0 +1,8 @@
+/**
+ * ApiForge Generated SDK
+ * Export all API services
+ */
+
+{{#each apis}}
+export { {{pascalCase name}}Api } from './{{kebabCase name}}';
+{{/each}}

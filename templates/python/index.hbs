@@ -1,0 +1,14 @@
+"""
+ApiForge Generated SDK
+Export all API services
+"""
+
+{{#each apis}}
+from .{{snake_case name}}_api import {{pascalCase name}}Api
+{{/each}}
+
+__all__ = [
+{{#each apis}}
+    '{{pascalCase name}}Api',
+{{/each}}
+]

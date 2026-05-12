@@ -1,0 +1,19 @@
+{
+  "name": "@apiforge/generator-ts",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@apiforge/core": "workspace:*",
+    "@apiforge/generator-core": "workspace:*",
+    "@apiforge/shared-utils": "workspace:*",
+    "handlebars": "^4.7.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

@@ -1,0 +1,14 @@
+/**
+ * ApiForge Generated SDK
+ * Export all API services
+ */
+
+{{#each apis}}
+const {{pascalCase name}}Api = require('./{{kebabCase name}}');
+{{/each}}
+
+module.exports = {
+{{#each apis}}
+  {{pascalCase name}}Api,
+{{/each}}
+};
