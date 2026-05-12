@@ -19,7 +19,7 @@ export class GeneratorService implements OnModuleInit {
   async generateForLanguage(
     language: string,
     project: any,
-    apis: ApiDefinition[],
+    collections: any[],
   ): Promise<GeneratedFile[]> {
     const generator = generatorRegistry.get(language);
     
@@ -29,14 +29,23 @@ export class GeneratorService implements OnModuleInit {
 
     const files: GeneratedFile[] = [];
 
-    // Generate individual API files
-    for (const api of apis) {
-      const file = await generator.generateApi(api, project);
-      files.push(file);
+    // Generate ONE file per collection (with all APIs as methods)
+    for (const collection of collections) {
+      // Generate collection service file
+      const collectionFile = await generator.generateCollection(collection, project);
+      files.push(collectionFile);
+
+      // Generate models file for this collection
+      const modelsFile = await generator.generateModels(collection, project);
+      files.push(modelsFile);
     }
 
+    // Generate core files (API client, response types, etc.)
+    const coreFiles = await generator.generateCore(project);
+    files.push(...coreFiles);
+
     // Generate index file
-    const indexFile = await generator.generateIndex(apis);
+    const indexFile = await generator.generateIndex(collections);
     files.push(indexFile);
 
     return files;
@@ -44,13 +53,13 @@ export class GeneratorService implements OnModuleInit {
 
   async generateForAllLanguages(
     project: any,
-    apis: ApiDefinition[],
+    collections: any[],
   ): Promise<Record<string, GeneratedFile[]>> {
     const languages = generatorRegistry.getSupportedLanguages();
     const result: Record<string, GeneratedFile[]> = {};
 
     for (const language of languages) {
-      result[language] = await this.generateForLanguage(language, project, apis);
+      result[language] = await this.generateForLanguage(language, project, collections);
     }
 
     return result;

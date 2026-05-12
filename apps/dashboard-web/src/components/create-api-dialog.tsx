@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const apiSchema = z.object({
+const apiFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   overrideBaseUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
@@ -47,18 +47,27 @@ const apiSchema = z.object({
   authRequired: z.boolean().optional(),
 });
 
-type ApiFormData = z.infer<typeof apiSchema>;
+type ApiFormData = z.infer<typeof apiFormSchema>;
+
+// Type for the actual API submission (after transformation)
+type ApiSubmitData = Omit<ApiFormData, 'headers'> & {
+  headers?: Record<string, string>;
+};
 
 interface CreateApiDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: ApiFormData) => void;
+  onSubmit: (data: ApiSubmitData) => void;
+  collection?: any;
+  project?: any;
 }
 
 export function CreateApiDialog({
   open,
   onOpenChange,
   onSubmit,
+  collection,
+  project,
 }: CreateApiDialogProps) {
   const {
     register,
@@ -68,7 +77,7 @@ export function CreateApiDialog({
     formState: { errors },
     reset,
   } = useForm<ApiFormData>({
-    resolver: zodResolver(apiSchema),
+    resolver: zodResolver(apiFormSchema),
     defaultValues: {
       method: "GET",
       headers: [],

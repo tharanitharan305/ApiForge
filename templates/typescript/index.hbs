@@ -1,8 +1,17 @@
 /**
- * ApiForge Generated SDK
- * Export all API services
+ * Generated SDK Index
  */
 
-{{#each apis}}
-export { {{pascalCase name}}Api } from './{{kebabCase name}}';
+// Export core
+export { ApiClient } from './core/api_client';
+export { ApiResponse, normalizeResponse } from './core/api_response';
+
+// Export collections
+{{#each collections}}
+export { {{pascalCase name}} } from './collections/{{snake_case name}}';
+{{/each}}
+
+// Export models
+{{#each collections}}
+export * from './models/{{snake_case name}}_models';
 {{/each}}

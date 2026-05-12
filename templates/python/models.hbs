@@ -1,0 +1,80 @@
+"""
+Models for {{name}} Collection
+"""
+
+from typing import Optional, Dict, Any
+
+
+{{#each apis}}
+{{#if requestBody}}
+class {{pascalCase name}}Body:
+    """Request body for {{name}}"""
+    
+    def __init__(
+        self,
+        {{#each requestBody}}
+        {{snake_case key}}: Optional[{{pythonType type}}] = None,
+        {{/each}}
+    ):
+        {{#each requestBody}}
+        self.{{snake_case key}} = {{snake_case key}}
+        {{/each}}
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            {{#each requestBody}}
+            '{{key}}': self.{{snake_case key}},
+            {{/each}}
+        }
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> '{{pascalCase name}}Body':
+        return cls(
+            {{#each requestBody}}
+            {{snake_case key}}=data.get('{{key}}'),
+            {{/each}}
+        )
+
+
+{{/if}}
+{{#if headers}}
+class {{pascalCase name}}Headers:
+    """Headers for {{name}}"""
+    
+    def __init__(
+        self,
+        {{#each headers}}
+        {{snake_case key}}: Optional[str] = None,
+        {{/each}}
+    ):
+        {{#each headers}}
+        self.{{snake_case key}} = {{snake_case key}}
+        {{/each}}
+    
+    def to_dict(self) -> Dict[str, str]:
+        headers = {}
+        {{#each headers}}
+        if self.{{snake_case key}} is not None:
+            headers['{{key}}'] = self.{{snake_case key}}
+        {{/each}}
+        return headers
+
+
+{{/if}}
+{{#if responseMapping}}
+class {{pascalCase name}}Response:
+    """Response for {{name}}"""
+    
+    def __init__(self, data: Dict[str, Any]):
+        self.data = data
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> '{{pascalCase name}}Response':
+        return cls(data)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return self.data
+
+
+{{/if}}
+{{/each}}

@@ -21,60 +21,76 @@ model User {
 }
 
 model Project {
-  id              String   @id @default(uuid())
-  name            String
-  description     String?
-  localBaseUrl    String   // Project-level local base URL
-  productionBaseUrl String // Project-level production base URL
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  apis            Api[]
-  exports         Export[]
+  id                String       @id @default(uuid())
+  name              String
+  description       String?
+  localBaseUrl      String       // Project-level local base URL
+  productionBaseUrl String       // Project-level production base URL
+  userId            String
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  collections       Collection[]
+  exports           Export[]
 
   @@index([userId])
   @@map("projects")
 }
 
-model Api {
+model Collection {
   id          String   @id @default(uuid())
   projectId   String
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   name        String
   description String?
+  basePath    String   // Collection base path like /auth or /users
+  headers     Json     @default("{}") // Static headers for this collection
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  apis        Api[]
+
+  @@index([projectId])
+  @@map("collections")
+}
+
+model Api {
+  id           String     @id @default(uuid())
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
   
-  // Optional base URL override (if not set, use project defaults)
+  // Optional full URL override (if not set, use project base + collection path + endpoint)
   overrideBaseUrl String?
   
   // Request configuration
-  endpoint       String
-  method         String // GET, POST, PUT, PATCH, DELETE
-  headers        Json   @default("{}")
-  queryParams    Json   @default("[]")
-  requestBody    Json   @default("[]")
+  endpoint    String // Just the endpoint like /login or /start
+  method      String // GET, POST, PUT, PATCH, DELETE
+  headers     Json   @default("{}") // Additional headers for this API (can include runtime placeholders)
+  queryParams Json   @default("[]")
+  requestBody Json   @default("[]")
   
   // Response configuration
   responseMapping Json
   
   // Additional settings
-  timeout        Int     @default(30000)
-  authRequired   Boolean @default(false)
+  timeout      Int     @default(30000)
+  authRequired Boolean @default(false)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([projectId])
+  @@index([collectionId])
   @@map("apis")
 }
 
 model Export {
-  id         String   @id @default(uuid())
-  projectId  String
-  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  config     Json
-  languages  String[] // Array of generated languages
-  createdAt  DateTime @default(now())
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  config    Json
+  languages String[] // Array of generated languages
+  createdAt DateTime @default(now())
 
   @@index([projectId])
   @@map("exports")

@@ -1,0 +1,69 @@
+const axios = require('axios');
+const { ApiClient } = require('../core/api_client');
+const { normalizeResponse } = require('../core/api_response');
+
+/**
+ * {{name}} Collection
+ * {{#if description}}{{description}}{{/if}}
+ * Base Path: {{basePath}}
+ */
+class {{pascalCase name}} {
+  {{#each apis}}
+  /**
+   * {{name}}
+   * {{#if description}}{{description}}{{/if}}
+   * Endpoint: {{../basePath}}{{endpoint}}
+   */
+  static async {{camelCase name}}({
+    {{#if requestBody}}body,{{/if}}
+    {{#if headers}}headers,{{/if}}
+    {{#if queryParams}}
+    {{#each queryParams}}
+    {{camelCase key}},
+    {{/each}}
+    {{/if}}
+  } = {}) {
+    const url = ApiClient.buildUrl('{{../basePath}}{{endpoint}}', {
+      {{#each queryParams}}
+      {{#if required}}
+      {{camelCase key}},
+      {{else}}
+      ...({{camelCase key}} !== undefined && { {{camelCase key}} }),
+      {{/if}}
+      {{/each}}
+    });
+
+    const requestHeaders = {
+      'Content-Type': 'application/json',
+      {{#each ../headers}}
+      '{{@key}}': '{{this}}',
+      {{/each}}
+      ...headers,
+    };
+
+    let response;
+    switch ('{{method}}') {
+      case 'GET':
+        response = await ApiClient.get(url, { headers: requestHeaders });
+        break;
+      case 'POST':
+        response = await ApiClient.post(url, {{#if requestBody}}body{{else}}null{{/if}}, { headers: requestHeaders });
+        break;
+      case 'PUT':
+        response = await ApiClient.put(url, {{#if requestBody}}body{{else}}null{{/if}}, { headers: requestHeaders });
+        break;
+      case 'PATCH':
+        response = await ApiClient.patch(url, {{#if requestBody}}body{{else}}null{{/if}}, { headers: requestHeaders });
+        break;
+      case 'DELETE':
+        response = await ApiClient.delete(url, { headers: requestHeaders });
+        break;
+    }
+
+    return normalizeResponse(response);
+  }
+
+  {{/each}}
+}
+
+module.exports = { {{pascalCase name}} };

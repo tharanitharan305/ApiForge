@@ -1,0 +1,37 @@
+/**
+ * Models for {{name}} Collection
+ */
+
+{{#each apis}}
+{{#if requestBody}}
+/**
+ * Request body for {{name}}
+ */
+export interface {{pascalCase name}}Body {
+  {{#each requestBody}}
+  {{camelCase key}}{{#unless required}}?{{/unless}}: {{tsType type}};
+  {{/each}}
+}
+{{/if}}
+
+{{#if headers}}
+/**
+ * Headers for {{name}}
+ */
+export interface {{pascalCase name}}Headers {
+  {{#each headers}}
+  {{camelCase key}}{{#unless required}}?{{/unless}}: string;
+  {{/each}}
+}
+{{/if}}
+
+{{#if responseMapping}}
+/**
+ * Response for {{name}}
+ */
+export interface {{pascalCase name}}Response {
+  [key: string]: any;
+}
+{{/if}}
+
+{{/each}}

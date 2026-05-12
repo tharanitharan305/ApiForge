@@ -12,41 +12,47 @@ import {
 import { ApiService } from './api.service';
 import { CreateApiDto, UpdateApiDto } from './dto';
 
-@Controller('projects/:projectId/apis')
+@Controller('collections/:collectionId/apis')
 export class ApiController {
   constructor(private readonly apiService: ApiService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
-    @Param('projectId') projectId: string,
+    @Param('collectionId') collectionId: string,
     @Body() createApiDto: CreateApiDto,
   ) {
-    return this.apiService.create(projectId, createApiDto);
+    return this.apiService.create(collectionId, createApiDto);
   }
 
   @Get()
-  findAll(@Param('projectId') projectId: string) {
-    return this.apiService.findAll(projectId);
+  findAll(@Param('collectionId') collectionId: string) {
+    return this.apiService.findAll(collectionId);
   }
 
   @Get(':id')
-  findOne(@Param('projectId') projectId: string, @Param('id') id: string) {
-    return this.apiService.findOne(id, projectId);
+  findOne(
+    @Param('collectionId') collectionId: string,
+    @Param('id') id: string,
+  ) {
+    return this.apiService.findOne(id, collectionId);
   }
 
   @Patch(':id')
   update(
-    @Param('projectId') projectId: string,
+    @Param('collectionId') collectionId: string,
     @Param('id') id: string,
     @Body() updateApiDto: UpdateApiDto,
   ) {
-    return this.apiService.update(id, projectId, updateApiDto);
+    return this.apiService.update(id, collectionId, updateApiDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('projectId') projectId: string, @Param('id') id: string) {
-    return this.apiService.remove(id, projectId);
+  remove(
+    @Param('collectionId') collectionId: string,
+    @Param('id') id: string,
+  ) {
+    return this.apiService.remove(id, collectionId);
   }
 }

@@ -1,0 +1,62 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+/// API Client for making HTTP requests
+class ApiClient {
+  final String baseUrl;
+  final Duration timeout;
+
+  ApiClient({
+    String? baseUrl,
+    this.timeout = const Duration(seconds: 30),
+  }) : baseUrl = baseUrl ?? '{{localBaseUrl}}';
+
+  /// Build full URL with query parameters
+  Uri buildUrl(String path, {Map<String, String>? queryParams}) {
+    final url = baseUrl + path;
+    final uri = Uri.parse(url);
+    
+    if (queryParams != null && queryParams.isNotEmpty) {
+      return uri.replace(queryParameters: queryParams);
+    }
+    
+    return uri;
+  }
+
+  /// GET request
+  Future<http.Response> get(Uri url, {Map<String, String>? headers}) async {
+    return await http.get(url, headers: headers).timeout(timeout);
+  }
+
+  /// POST request
+  Future<http.Response> post(
+    Uri url, {
+    Map<String, String>? headers,
+    String? body,
+  }) async {
+    return await http.post(url, headers: headers, body: body).timeout(timeout);
+  }
+
+  /// PUT request
+  Future<http.Response> put(
+    Uri url, {
+    Map<String, String>? headers,
+    String? body,
+  }) async {
+    return await http.put(url, headers: headers, body: body).timeout(timeout);
+  }
+
+  /// PATCH request
+  Future<http.Response> patch(
+    Uri url, {
+    Map<String, String>? headers,
+    String? body,
+  }) async {
+    return await http.patch(url, headers: headers, body: body).timeout(timeout);
+  }
+
+  /// DELETE request
+  Future<http.Response> delete(Uri url, {Map<String, String>? headers}) async {
+    return await http.delete(url, headers: headers).timeout(timeout);
+  }
+}

@@ -1,0 +1,91 @@
+/**
+ * Models for {{name}} Collection
+ */
+
+{{#each apis}}
+{{#if requestBody}}
+/**
+ * Request body for {{name}}
+ */
+class {{pascalCase name}}Body {
+  constructor({
+    {{#each requestBody}}
+    {{camelCase key}},
+    {{/each}}
+  } = {}) {
+    {{#each requestBody}}
+    this.{{camelCase key}} = {{camelCase key}};
+    {{/each}}
+  }
+
+  toJSON() {
+    return {
+      {{#each requestBody}}
+      {{key}}: this.{{camelCase key}},
+      {{/each}}
+    };
+  }
+}
+{{/if}}
+
+{{#if headers}}
+/**
+ * Headers for {{name}}
+ */
+class {{pascalCase name}}Headers {
+  constructor({
+    {{#each headers}}
+    {{camelCase key}},
+    {{/each}}
+  } = {}) {
+    {{#each headers}}
+    this.{{camelCase key}} = {{camelCase key}};
+    {{/each}}
+  }
+
+  toObject() {
+    const headers = {};
+    {{#each headers}}
+    if (this.{{camelCase key}} !== undefined) {
+      headers['{{key}}'] = this.{{camelCase key}};
+    }
+    {{/each}}
+    return headers;
+  }
+}
+{{/if}}
+
+{{#if responseMapping}}
+/**
+ * Response for {{name}}
+ */
+class {{pascalCase name}}Response {
+  constructor(data) {
+    this.data = data;
+  }
+
+  static fromJSON(json) {
+    return new {{pascalCase name}}Response(json);
+  }
+
+  toJSON() {
+    return this.data;
+  }
+}
+{{/if}}
+
+{{/each}}
+
+module.exports = {
+  {{#each apis}}
+  {{#if requestBody}}
+  {{pascalCase name}}Body,
+  {{/if}}
+  {{#if headers}}
+  {{pascalCase name}}Headers,
+  {{/if}}
+  {{#if responseMapping}}
+  {{pascalCase name}}Response,
+  {{/if}}
+  {{/each}}
+};

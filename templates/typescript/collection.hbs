@@ -1,0 +1,96 @@
+import axios from 'axios';
+import { ApiClient } from '../core/api_client';
+import { ApiResponse, normalizeResponse } from '../core/api_response';
+import {
+  {{#each apis}}
+  {{#if requestBody}}
+  {{pascalCase name}}Body,
+  {{/if}}
+  {{#if headers}}
+  {{pascalCase name}}Headers,
+  {{/if}}
+  {{#if responseMapping}}
+  {{pascalCase name}}Response,
+  {{/if}}
+  {{/each}}
+} from '../models/{{snake_case name}}_models';
+
+/**
+ * {{name}} Collection
+ * {{#if description}}{{description}}{{/if}}
+ * Base Path: {{basePath}}
+ */
+export class {{pascalCase name}} {
+  {{#each apis}}
+  /**
+   * {{name}}
+   * {{#if description}}{{description}}{{/if}}
+   * Endpoint: {{../basePath}}{{endpoint}}
+   */
+  static async {{camelCase name}}({
+    {{#if requestBody}}
+    body,
+    {{/if}}
+    {{#if headers}}
+    headers,
+    {{/if}}
+    {{#if queryParams}}
+    {{#each queryParams}}
+    {{camelCase key}},
+    {{/each}}
+    {{/if}}
+  }: {
+    {{#if requestBody}}
+    body: {{pascalCase name}}Body;
+    {{/if}}
+    {{#if headers}}
+    headers?: {{pascalCase name}}Headers;
+    {{/if}}
+    {{#if queryParams}}
+    {{#each queryParams}}
+    {{camelCase key}}{{#unless required}}?{{/unless}}: {{tsType type}};
+    {{/each}}
+    {{/if}}
+  } = {}): Promise<ApiResponse{{#if responseMapping}}<{{pascalCase name}}Response>{{/if}}> {
+    const url = ApiClient.buildUrl('{{../basePath}}{{endpoint}}', {
+      {{#each queryParams}}
+      {{#if required}}
+      {{camelCase key}},
+      {{else}}
+      ...({{camelCase key}} !== undefined && { {{camelCase key}} }),
+      {{/if}}
+      {{/each}}
+    });
+
+    const requestHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      {{#each ../headers}}
+      '{{@key}}': '{{this}}',
+      {{/each}}
+      ...headers,
+    };
+
+    let response;
+    switch ('{{method}}') {
+      case 'GET':
+        response = await ApiClient.get(url, { headers: requestHeaders });
+        break;
+      case 'POST':
+        response = await ApiClient.post(url, {{#if requestBody}}body{{else}}null{{/if}}, { headers: requestHeaders });
+        break;
+      case 'PUT':
+        response = await ApiClient.put(url, {{#if requestBody}}body{{else}}null{{/if}}, { headers: requestHeaders });
+        break;
+      case 'PATCH':
+        response = await ApiClient.patch(url, {{#if requestBody}}body{{else}}null{{/if}}, { headers: requestHeaders });
+        break;
+      case 'DELETE':
+        response = await ApiClient.delete(url, { headers: requestHeaders });
+        break;
+    }
+
+    return normalizeResponse{{#if responseMapping}}<{{pascalCase name}}Response>{{/if}}(response);
+  }
+
+  {{/each}}
+}

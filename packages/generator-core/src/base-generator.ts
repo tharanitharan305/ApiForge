@@ -32,16 +32,8 @@ export abstract class BaseGenerator implements GeneratorPlugin {
     this.handlebars.registerHelper('uppercase', (str: string) => str.toUpperCase());
     this.handlebars.registerHelper('lowercase', (str: string) => str.toLowerCase());
     
-    // Comparison helpers - must return content in block form
-    this.handlebars.registerHelper('eq', function(this: any, a: any, b: any, options: any) {
-      if (arguments.length === 3) {
-        // Inline form: {{eq a b}}
-        return a === b;
-      }
-      // Block form: {{#eq a b}}content{{/eq}}
-      return a === b ? options.fn(this) : options.inverse(this);
-    });
-    
+    // Comparison helpers - inline form only
+    this.handlebars.registerHelper('eq', (a: any, b: any) => a === b);
     this.handlebars.registerHelper('or', (a: any, b: any) => a || b);
     this.handlebars.registerHelper('and', (a: any, b: any) => a && b);
     
@@ -94,19 +86,36 @@ export abstract class BaseGenerator implements GeneratorPlugin {
   }
 
   /**
-   * Generate API service file
+   * Generate a single collection file with all its APIs as methods
    */
-  abstract generateApi(api: ApiDefinition, project: any): Promise<GeneratedFile>;
+  abstract generateCollection(collection: any, project: any): Promise<GeneratedFile>;
 
   /**
-   * Generate index file that exports all APIs
+   * Generate models file for a collection
    */
-  abstract generateIndex(apis: ApiDefinition[]): Promise<GeneratedFile>;
+  abstract generateModels(collection: any, project: any): Promise<GeneratedFile>;
 
   /**
-   * Get filename for an API
+   * Generate core/shared files (API client, response types, etc.)
    */
-  protected getFilename(apiName: string): string {
-    return `${helpers.toKebabCase(apiName)}.${this.fileExtension}`;
+  abstract generateCore(project: any): Promise<GeneratedFile[]>;
+
+  /**
+   * Generate index file that exports all collections
+   */
+  abstract generateIndex(collections: any[]): Promise<GeneratedFile>;
+
+  /**
+   * Get filename for a collection
+   */
+  protected getCollectionFilename(collectionName: string): string {
+    return `${helpers.toSnakeCase(collectionName)}.${this.fileExtension}`;
+  }
+
+  /**
+   * Get filename for models
+   */
+  protected getModelsFilename(collectionName: string): string {
+    return `${helpers.toSnakeCase(collectionName)}_models.${this.fileExtension}`;
   }
 }

@@ -1,0 +1,65 @@
+/// Models for {{name}} Collection
+
+{{#each apis}}
+{{#if requestBody}}
+/// Request body for {{name}}
+class {{pascalCase name}}Body {
+  {{#each requestBody}}
+  final {{dartType type}}{{#unless required}}?{{/unless}} {{camelCase key}};
+  {{/each}}
+
+  {{pascalCase name}}Body({
+    {{#each requestBody}}
+    {{#if required}}required {{/if}}this.{{camelCase key}},
+    {{/each}}
+  });
+
+  Map<String, dynamic> toJson() => {
+    {{#each requestBody}}
+    '{{key}}': {{camelCase key}},
+    {{/each}}
+  };
+}
+{{/if}}
+
+{{#if headers}}
+/// Headers for {{name}}
+class {{pascalCase name}}Headers {
+  {{#each headers}}
+  final String{{#unless required}}?{{/unless}} {{camelCase key}};
+  {{/each}}
+
+  {{pascalCase name}}Headers({
+    {{#each headers}}
+    {{#if required}}required {{/if}}this.{{camelCase key}},
+    {{/each}}
+  });
+
+  Map<String, String> toMap() => {
+    {{#each headers}}
+    {{#if required}}
+    '{{key}}': {{camelCase key}},
+    {{else}}
+    if ({{camelCase key}} != null) '{{key}}': {{camelCase key}}!,
+    {{/if}}
+    {{/each}}
+  };
+}
+{{/if}}
+
+{{#if responseMapping}}
+/// Response for {{name}}
+class {{pascalCase name}}Response {
+  final Map<String, dynamic> data;
+
+  {{pascalCase name}}Response(this.data);
+
+  factory {{pascalCase name}}Response.fromJson(Map<String, dynamic> json) {
+    return {{pascalCase name}}Response(json);
+  }
+
+  Map<String, dynamic> toJson() => data;
+}
+{{/if}}
+
+{{/each}}

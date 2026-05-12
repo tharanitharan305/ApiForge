@@ -6,10 +6,10 @@ import { CreateApiDto, UpdateApiDto } from './dto';
 export class ApiService {
   constructor(private prisma: PrismaService) {}
 
-  async create(projectId: string, dto: CreateApiDto) {
+  async create(collectionId: string, dto: CreateApiDto) {
     return this.prisma.api.create({
       data: {
-        projectId,
+        collectionId,
         name: dto.name,
         description: dto.description,
         overrideBaseUrl: dto.overrideBaseUrl,
@@ -25,18 +25,18 @@ export class ApiService {
     });
   }
 
-  async findAll(projectId: string) {
+  async findAll(collectionId: string) {
     return this.prisma.api.findMany({
-      where: { projectId },
+      where: { collectionId },
       orderBy: {
         updatedAt: 'desc',
       },
     });
   }
 
-  async findOne(id: string, projectId: string) {
+  async findOne(id: string, collectionId: string) {
     const api = await this.prisma.api.findFirst({
-      where: { id, projectId },
+      where: { id, collectionId },
     });
 
     if (!api) {
@@ -46,8 +46,8 @@ export class ApiService {
     return api;
   }
 
-  async update(id: string, projectId: string, dto: UpdateApiDto) {
-    await this.findOne(id, projectId); // Check existence
+  async update(id: string, collectionId: string, dto: UpdateApiDto) {
+    await this.findOne(id, collectionId); // Check existence
 
     const updateData: any = {};
     if (dto.name !== undefined) updateData.name = dto.name;
@@ -68,8 +68,8 @@ export class ApiService {
     });
   }
 
-  async remove(id: string, projectId: string) {
-    await this.findOne(id, projectId); // Check existence
+  async remove(id: string, collectionId: string) {
+    await this.findOne(id, collectionId); // Check existence
 
     return this.prisma.api.delete({
       where: { id },

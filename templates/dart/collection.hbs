@@ -1,0 +1,92 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../core/api_client.dart';
+import '../core/api_response.dart';
+import '../models/{{snake_case name}}_models.dart';
+
+/// {{name}} Collection
+/// {{#if description}}{{description}}{{/if}}
+/// Base Path: {{basePath}}
+class {{pascalCase name}} {
+  static final ApiClient _client = ApiClient();
+
+  {{#each apis}}
+  /// {{name}}
+  {{#if description}}/// {{description}}{{/if}}
+  /// Endpoint: {{../basePath}}{{endpoint}}
+  static Future<ApiResponse{{#if responseMapping}}<{{pascalCase name}}Response>{{/if}}> {{camelCase name}}({
+    {{#if requestBody}}
+    required {{pascalCase name}}Body body,
+    {{/if}}
+    {{#if headers}}
+    {{pascalCase name}}Headers? headers,
+    {{/if}}
+    {{#if queryParams}}
+    {{#each queryParams}}
+    {{#if required}}required {{/if}}{{dartType type}}? {{camelCase key}},
+    {{/each}}
+    {{/if}}
+  }) async {
+    final url = _client.buildUrl(
+      '{{../basePath}}{{endpoint}}',
+      queryParams: {
+        {{#each queryParams}}
+        {{#if required}}
+        '{{key}}': {{camelCase key}}.toString(),
+        {{else}}
+        if ({{camelCase key}} != null) '{{key}}': {{camelCase key}}.toString(),
+        {{/if}}
+        {{/each}}
+      },
+    );
+
+    final requestHeaders = <String, String>{
+      'Content-Type': 'application/json',
+      {{#each ../headers}}
+      '{{@key}}': '{{this}}',
+      {{/each}}
+      {{#if headers}}
+      ...?headers?.toMap(),
+      {{/if}}
+    };
+
+    {{#eq method "GET"}}
+    final response = await _client.get(url, headers: requestHeaders);
+    {{/eq}}
+    {{#eq method "POST"}}
+    final response = await _client.post(
+      url,
+      headers: requestHeaders,
+      body: {{#if requestBody}}jsonEncode(body.toJson()){{else}}null{{/if}},
+    );
+    {{/eq}}
+    {{#eq method "PUT"}}
+    final response = await _client.put(
+      url,
+      headers: requestHeaders,
+      body: {{#if requestBody}}jsonEncode(body.toJson()){{else}}null{{/if}},
+    );
+    {{/eq}}
+    {{#eq method "PATCH"}}
+    final response = await _client.patch(
+      url,
+      headers: requestHeaders,
+      body: {{#if requestBody}}jsonEncode(body.toJson()){{else}}null{{/if}},
+    );
+    {{/eq}}
+    {{#eq method "DELETE"}}
+    final response = await _client.delete(url, headers: requestHeaders);
+    {{/eq}}
+
+    return ApiResponse{{#if responseMapping}}<{{pascalCase name}}Response>{{/if}}.fromResponse(
+      response,
+      {{#if responseMapping}}
+      (data) => {{pascalCase name}}Response.fromJson(data as Map<String, dynamic>),
+      {{else}}
+      null,
+      {{/if}}
+    );
+  }
+
+  {{/each}}
+}

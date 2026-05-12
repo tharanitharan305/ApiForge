@@ -13,7 +13,7 @@ export class ProjectService {
         userId,
       },
       include: {
-        apis: true,
+        collections: true,
       },
     });
   }
@@ -22,10 +22,18 @@ export class ProjectService {
     return this.prisma.project.findMany({
       where: { userId },
       include: {
-        apis: true,
+        collections: {
+          include: {
+            _count: {
+              select: {
+                apis: true,
+              },
+            },
+          },
+        },
         _count: {
           select: {
-            apis: true,
+            collections: true,
             exports: true,
           },
         },
@@ -40,7 +48,11 @@ export class ProjectService {
     const project = await this.prisma.project.findFirst({
       where: { id, userId },
       include: {
-        apis: true,
+        collections: {
+          include: {
+            apis: true,
+          },
+        },
       },
     });
 
@@ -58,7 +70,7 @@ export class ProjectService {
       where: { id },
       data: dto,
       include: {
-        apis: true,
+        collections: true,
       },
     });
   }

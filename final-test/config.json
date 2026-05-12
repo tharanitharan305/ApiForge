@@ -1,0 +1,60 @@
+{
+  "project": {
+    "id": "703f6e87-9393-4d75-b48f-cdc65c9e2330",
+    "name": "editor",
+    "description": "asd",
+    "localBaseUrl": "https://localhost/api/v1/api",
+    "productionBaseUrl": "https://apidev.cloud/api/v1/api"
+  },
+  "collections": [
+    {
+      "id": "f9303bc1-f9b5-454d-b77b-c93750c14ca3",
+      "name": "login",
+      "description": "",
+      "basePath": "/auth",
+      "headers": {},
+      "apis": [
+        {
+          "id": "45ca6b66-bc61-410a-b1a4-7cbc2b1ed959",
+          "name": "createAccount",
+          "description": "",
+          "overrideBaseUrl": null,
+          "endpoint": "/createAccount",
+          "method": "POST",
+          "headers": {},
+          "queryParams": [],
+          "requestBody": [
+            {
+              "key": "user_id",
+              "type": "string",
+              "required": true,
+              "defaultValue": ""
+            },
+            {
+              "key": "summaryRef",
+              "type": "string",
+              "required": true,
+              "defaultValue": ""
+            },
+            {
+              "key": "note_content",
+              "type": "string",
+              "required": true,
+              "defaultValue": ""
+            }
+          ],
+          "responseMapping": {
+            "dataPath": "data[\"super\"]",
+            "messagePath": "message",
+            "successPath": "success",
+            "statusCodePath": ""
+          },
+          "timeout": 30000,
+          "authRequired": false
+        }
+      ]
+    }
+  ],
+  "exportedAt": "2026-05-12T13:22:37.502Z",
+  "version": "2.0.0"
+}

@@ -1,0 +1,79 @@
+import requests
+from typing import Optional, Dict, Any
+from ..core.api_client import ApiClient
+from ..core.api_response import ApiResponse, normalize_response
+from ..models.{{snake_case name}}_models import *
+
+
+class {{pascalCase name}}:
+    """
+    {{name}} Collection
+    {{#if description}}{{description}}{{/if}}
+    Base Path: {{basePath}}
+    """
+    
+    {{#each apis}}
+    @staticmethod
+    def {{snake_case name}}(
+        {{#if requestBody}}
+        body: Optional['{{pascalCase name}}Body'] = None,
+        {{/if}}
+        {{#if headers}}
+        headers: Optional['{{pascalCase name}}Headers'] = None,
+        {{/if}}
+        {{#if queryParams}}
+        {{#each queryParams}}
+        {{snake_case key}}: Optional[{{pythonType type}}] = None,
+        {{/each}}
+        {{/if}}
+    ) -> ApiResponse:
+        """
+        {{name}}
+        {{#if description}}{{description}}{{/if}}
+        Endpoint: {{../basePath}}{{endpoint}}
+        """
+        query_params = {}
+        {{#each queryParams}}
+        if {{snake_case key}} is not None:
+            query_params['{{key}}'] = {{snake_case key}}
+        {{/each}}
+        
+        url = ApiClient.build_url('{{../basePath}}{{endpoint}}', query_params)
+        
+        request_headers = {
+            'Content-Type': 'application/json',
+            {{#each ../headers}}
+            '{{@key}}': '{{this}}',
+            {{/each}}
+        }
+        
+        if headers is not None:
+            request_headers.update(headers.to_dict())
+        
+        method = '{{method}}'
+        if method == 'GET':
+            response = ApiClient.get(url, headers=request_headers)
+        elif method == 'POST':
+            response = ApiClient.post(
+                url,
+                json=body.to_dict() if body else None,
+                headers=request_headers
+            )
+        elif method == 'PUT':
+            response = ApiClient.put(
+                url,
+                json=body.to_dict() if body else None,
+                headers=request_headers
+            )
+        elif method == 'PATCH':
+            response = ApiClient.patch(
+                url,
+                json=body.to_dict() if body else None,
+                headers=request_headers
+            )
+        elif method == 'DELETE':
+            response = ApiClient.delete(url, headers=request_headers)
+        
+        return normalize_response(response)
+    
+    {{/each}}

@@ -29,6 +29,30 @@ export const api = {
       await apiClient.delete(`/projects/${id}`);
     },
   },
+  collections: {
+    list: async (projectId: string) => {
+      const { data } = await apiClient.get(`/projects/${projectId}/collections`);
+      return data;
+    },
+    get: async (projectId: string, id: string) => {
+      const { data } = await apiClient.get(`/projects/${projectId}/collections/${id}`);
+      return data;
+    },
+    create: async (projectId: string, collection: any) => {
+      const { data } = await apiClient.post(`/projects/${projectId}/collections`, collection);
+      return data;
+    },
+    update: async (projectId: string, id: string, collection: any) => {
+      const { data } = await apiClient.patch(
+        `/projects/${projectId}/collections/${id}`,
+        collection
+      );
+      return data;
+    },
+    delete: async (projectId: string, id: string) => {
+      await apiClient.delete(`/projects/${projectId}/collections/${id}`);
+    },
+  },
   apis: {
     list: async (projectId: string) => {
       const { data } = await apiClient.get(`/projects/${projectId}/apis`);
@@ -51,6 +75,15 @@ export const api = {
     },
     delete: async (projectId: string, id: string) => {
       await apiClient.delete(`/projects/${projectId}/apis/${id}`);
+    },
+    // Collection-based API endpoints
+    createInCollection: async (collectionId: string, api: any) => {
+      const { data } = await apiClient.post(`/collections/${collectionId}/apis`, api);
+      return data;
+    },
+    listInCollection: async (collectionId: string) => {
+      const { data } = await apiClient.get(`/collections/${collectionId}/apis`);
+      return data;
     },
   },
   export: {

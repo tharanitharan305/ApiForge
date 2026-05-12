@@ -1,14 +1,34 @@
 /**
- * ApiForge Generated SDK
- * Export all API services
+ * Generated SDK Index
  */
 
-{{#each apis}}
-const {{pascalCase name}}Api = require('./{{kebabCase name}}');
+// Export core
+const { ApiClient } = require('./core/api_client');
+const { ApiResponse, normalizeResponse } = require('./core/api_response');
+
+// Export collections
+{{#each collections}}
+const { {{pascalCase name}} } = require('./collections/{{snake_case name}}');
+{{/each}}
+
+// Export models
+{{#each collections}}
+const {{pascalCase name}}Models = require('./models/{{snake_case name}}_models');
 {{/each}}
 
 module.exports = {
-{{#each apis}}
-  {{pascalCase name}}Api,
-{{/each}}
+  // Core
+  ApiClient,
+  ApiResponse,
+  normalizeResponse,
+  
+  // Collections
+  {{#each collections}}
+  {{pascalCase name}},
+  {{/each}}
+  
+  // Models
+  {{#each collections}}
+  {{pascalCase name}}Models,
+  {{/each}}
 };

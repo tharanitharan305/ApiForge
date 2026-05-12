@@ -1,0 +1,64 @@
+import requests
+from typing import Dict, Any, Optional
+from urllib.parse import urlencode
+
+
+class ApiClient:
+    """API Client for making HTTP requests"""
+    
+    base_url = '{{localBaseUrl}}'
+    timeout = 30
+    
+    @classmethod
+    def build_url(cls, path: str, query_params: Optional[Dict[str, Any]] = None) -> str:
+        """Build full URL with query parameters"""
+        url = cls.base_url + path
+        
+        if query_params:
+            # Filter out None values
+            filtered_params = {k: v for k, v in query_params.items() if v is not None}
+            if filtered_params:
+                query_string = urlencode(filtered_params)
+                url = f"{url}?{query_string}"
+        
+        return url
+    
+    @classmethod
+    def get(cls, url: str, headers: Optional[Dict[str, str]] = None) -> requests.Response:
+        """GET request"""
+        return requests.get(url, headers=headers, timeout=cls.timeout)
+    
+    @classmethod
+    def post(
+        cls,
+        url: str,
+        json: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, str]] = None
+    ) -> requests.Response:
+        """POST request"""
+        return requests.post(url, json=json, headers=headers, timeout=cls.timeout)
+    
+    @classmethod
+    def put(
+        cls,
+        url: str,
+        json: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, str]] = None
+    ) -> requests.Response:
+        """PUT request"""
+        return requests.put(url, json=json, headers=headers, timeout=cls.timeout)
+    
+    @classmethod
+    def patch(
+        cls,
+        url: str,
+        json: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, str]] = None
+    ) -> requests.Response:
+        """PATCH request"""
+        return requests.patch(url, json=json, headers=headers, timeout=cls.timeout)
+    
+    @classmethod
+    def delete(cls, url: str, headers: Optional[Dict[str, str]] = None) -> requests.Response:
+        """DELETE request"""
+        return requests.delete(url, headers=headers, timeout=cls.timeout)

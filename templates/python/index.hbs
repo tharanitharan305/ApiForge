@@ -1,14 +1,34 @@
 """
-ApiForge Generated SDK
-Export all API services
+Generated SDK Index
 """
 
-{{#each apis}}
-from .{{snake_case name}}_api import {{pascalCase name}}Api
+# Export core
+from .core.api_client import ApiClient
+from .core.api_response import ApiResponse, normalize_response
+
+# Export collections
+{{#each collections}}
+from .collections.{{snake_case name}} import {{pascalCase name}}
+{{/each}}
+
+# Export models
+{{#each collections}}
+from .models import {{snake_case name}}_models
 {{/each}}
 
 __all__ = [
-{{#each apis}}
-    '{{pascalCase name}}Api',
-{{/each}}
+    # Core
+    'ApiClient',
+    'ApiResponse',
+    'normalize_response',
+    
+    # Collections
+    {{#each collections}}
+    '{{pascalCase name}}',
+    {{/each}}
+    
+    # Models
+    {{#each collections}}
+    '{{snake_case name}}_models',
+    {{/each}}
 ]
