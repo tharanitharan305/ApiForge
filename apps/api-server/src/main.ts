@@ -11,6 +11,8 @@ async function bootstrap() {
       'http://localhost:3000',
       'http://localhost:3001',
       process.env.FRONTEND_URL,
+      // Allow all Vercel preview deployments
+      /^https:\/\/.*\.vercel\.app$/,
     ].filter(Boolean),
     credentials: true,
   });
