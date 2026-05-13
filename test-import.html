@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Postman Import</title>
+</head>
+<body>
+    <h1>Test Postman Import</h1>
+    <input type="file" id="fileInput" accept=".json">
+    <button onclick="testImport()">Import</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testImport() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) {
+                alert('Please select a file');
+                return;
+            }
+
+            try {
+                const text = await file.text();
+                const collection = JSON.parse(text);
+                
+                console.log('Sending collection:', collection);
+                
+                const response = await fetch('http://localhost:4000/api/import/postman', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ collection }),
+                });
+
+                const result = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+                
+                if (response.ok) {
+                    alert('Import successful! Project ID: ' + result.project.id);
+                } else {
+                    alert('Import failed: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

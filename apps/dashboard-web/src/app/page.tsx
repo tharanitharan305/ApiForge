@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { ProjectCard } from "@/components/project-card";
 import { CreateProjectDialog } from "@/components/create-project-dialog";
+import { ImportPostmanDialog } from "@/components/import-postman-dialog";
 import { api } from "@/lib/api";
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [importPostmanDialogOpen, setImportPostmanDialogOpen] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -49,10 +51,19 @@ export default function Home() {
               Generate production-ready API SDKs for multiple languages
             </p>
           </div>
-          <Button onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Project
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setImportPostmanDialogOpen(true)}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Import Postman
+            </Button>
+            <Button onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Project
+            </Button>
+          </div>
         </div>
 
         {loading ? (
@@ -87,6 +98,12 @@ export default function Home() {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onSubmit={handleCreateProject}
+      />
+
+      <ImportPostmanDialog
+        open={importPostmanDialogOpen}
+        onOpenChange={setImportPostmanDialogOpen}
+        onSuccess={loadProjects}
       />
     </div>
   );

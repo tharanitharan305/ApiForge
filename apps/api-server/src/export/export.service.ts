@@ -5,6 +5,8 @@ import { ProjectService } from '../project/project.service';
 import { CollectionService } from '../collection/collection.service';
 import { createZipStream, ZipFile } from '@apiforge/shared-utils';
 import { GeneratorValidator } from '@apiforge/generator-core';
+import { PostmanParserService, ImportWarning } from './services/postman-parser.service';
+import { PostmanExporterService } from './services/postman-exporter.service';
 import { Readable } from 'stream';
 
 @Injectable()
@@ -14,6 +16,8 @@ export class ExportService {
     private generatorService: GeneratorService,
     private projectService: ProjectService,
     private collectionService: CollectionService,
+    private postmanParser: PostmanParserService,
+    private postmanExporter: PostmanExporterService,
   ) {}
 
   async generateZip(
@@ -210,5 +214,101 @@ export class ExportService {
       message: 'Config imported successfully',
       imported: importedCollections.length,
     };
+  }
+
+  /**
+   * Import Postman Collection v2.1
+   */
+  async importPostmanCollection(postmanJson: any, userId: string): Promise<{
+    projectId: string;
+    project: any;
+    collections: any[];
+    stats: {
+      collectionsCreated: number;
+      apisCreated: number;
+      warnings: ImportWarning[];
+    };
+    message: string;
+    warnings: ImportWarning[];
+  }> {
+    // Parse Postman collection
+    const parsed = this.postmanParser.parseCollection(postmanJson);
+
+    // Create project
+    const project = await this.prisma.project.create({
+      data: {
+        userId,
+        name: parsed.projectName,
+        description: parsed.projectDescription || '',
+        localBaseUrl: parsed.baseUrl,
+        productionBaseUrl: parsed.baseUrl,
+      },
+    });
+
+    // Create collections and APIs
+    const createdCollections = [];
+    let totalApisCreated = 0;
+
+    for (const collectionData of parsed.collections) {
+      const collection = await this.prisma.collection.create({
+        data: {
+          projectId: project.id,
+          name: collectionData.name,
+          description: collectionData.description || '',
+          basePath: collectionData.basePath,
+          headers: collectionData.headers,
+        },
+      });
+
+      // Create APIs
+      for (const apiData of collectionData.apis) {
+        await this.prisma.api.create({
+          data: {
+            collectionId: collection.id,
+            name: apiData.name,
+            description: apiData.description || '',
+            endpoint: apiData.endpoint,
+            method: apiData.method,
+            headers: apiData.headers,
+            queryParams: apiData.queryParams,
+            requestBody: apiData.requestBody,
+            authRequired: apiData.authRequired,
+            timeout: 30000,
+            overrideBaseUrl: null,
+            responseMapping: null,
+          },
+        });
+        totalApisCreated++;
+      }
+
+      createdCollections.push(collection);
+    }
+
+    return {
+      projectId: project.id,
+      project,
+      collections: createdCollections,
+      stats: {
+        collectionsCreated: createdCollections.length,
+        apisCreated: totalApisCreated,
+        warnings: parsed.warnings || [],
+      },
+      message: `Postman collection imported successfully. Created ${createdCollections.length} collection(s) with ${totalApisCreated} API(s).`,
+      warnings: parsed.warnings || [],
+    };
+  }
+
+  /**
+   * Export project as Postman Collection v2.1
+   */
+  async exportPostmanCollection(projectId: string) {
+    const MOCK_USER_ID = '00000000-0000-0000-0000-000000000000';
+    const project = await this.projectService.findOne(projectId, MOCK_USER_ID);
+    const collections = await this.collectionService.findAll(projectId);
+
+    // Export to Postman format
+    const postmanCollection = this.postmanExporter.exportToPostman(project, collections);
+
+    return postmanCollection;
   }
 }

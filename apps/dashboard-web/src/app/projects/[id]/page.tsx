@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Plus, Download, Upload, ArrowLeft, FolderPlus, Folder } from "lucide-react";
+import { Plus, Download, Upload, ArrowLeft, FolderPlus, Folder, FileJson } from "lucide-react";
 import { ApiTable } from "@/components/api-table";
 import { CreateApiDialog } from "@/components/create-api-dialog-v2";
 import { CreateCollectionDialog } from "@/components/create-collection-dialog";
@@ -109,6 +109,28 @@ export default function ProjectPage() {
     }
   };
 
+  const handleExportPostman = async () => {
+    try {
+      const postmanCollection = await api.export.exportPostman(projectId);
+      
+      // Download as JSON file
+      const blob = new Blob([JSON.stringify(postmanCollection, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${project?.name || "collection"}.postman_collection.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to export Postman collection:", error);
+      alert("Failed to export Postman collection");
+    }
+  };
+
   const totalApis = collections.reduce((sum, c) => sum + (c.apis?.length || 0), 0);
 
   if (loading) {
@@ -204,7 +226,7 @@ export default function ProjectPage() {
             <Button variant="outline" size="sm" className="w-full" asChild>
               <span>
                 <Upload className="mr-2 h-4 w-4" />
-                Import
+                Import Config
               </span>
             </Button>
             <input
@@ -224,6 +246,17 @@ export default function ProjectPage() {
           >
             <Download className="mr-2 h-4 w-4" />
             Export SDK
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={handleExportPostman}
+            disabled={totalApis === 0}
+          >
+            <FileJson className="mr-2 h-4 w-4" />
+            Export Postman
           </Button>
         </div>
       </div>
@@ -287,6 +320,8 @@ export default function ProjectPage() {
                 <ApiTable
                   apis={selectedCollection.apis}
                   projectId={projectId}
+                  project={project}
+                  collection={selectedCollection}
                   onUpdate={loadData}
                 />
               ) : (

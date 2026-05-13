@@ -1,0 +1,222 @@
+﻿{
+    "info":  {
+                 "name":  "Bi Intelligence API",
+                 "description":  "API for Business Intelligence Platform",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+                 "_postman_id":  "32a8c0fb-893b-40bf-a015-a996b2aa962f"
+             },
+    "item":  [
+                 {
+                     "name":  "Auth",
+                     "description":  "",
+                     "item":  [
+                                  {
+                                      "name":  "Login",
+                                      "description":  "",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "http://localhost:5050/v1/api/auth/login",
+                                                                  "protocol":  "http",
+                                                                  "host":  [
+                                                                               "localhost"
+                                                                           ],
+                                                                  "port":  "5050",
+                                                                  "path":  [
+                                                                               "v1",
+                                                                               "api",
+                                                                               "auth",
+                                                                               "login"
+                                                                           ]
+                                                              },
+                                                      "description":  "",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"user@example.com\",\n  \"password\": \"secret123\",\n  \"rememberMe\": true\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Logout",
+                                      "description":  "",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{token}}",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "http://localhost:5050/v1/api/auth/logout",
+                                                                  "protocol":  "http",
+                                                                  "host":  [
+                                                                               "localhost"
+                                                                           ],
+                                                                  "port":  "5050",
+                                                                  "path":  [
+                                                                               "v1",
+                                                                               "api",
+                                                                               "auth",
+                                                                               "logout"
+                                                                           ]
+                                                              },
+                                                      "description":  ""
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Session",
+                     "description":  "",
+                     "item":  [
+                                  {
+                                      "name":  "Start Session",
+                                      "description":  "",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "http://localhost:5050/v1/api/session/start",
+                                                                  "protocol":  "http",
+                                                                  "host":  [
+                                                                               "localhost"
+                                                                           ],
+                                                                  "port":  "5050",
+                                                                  "path":  [
+                                                                               "v1",
+                                                                               "api",
+                                                                               "session",
+                                                                               "start"
+                                                                           ]
+                                                              },
+                                                      "description":  "",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"userIdRef\": \"58f0b5\",\n  \"platform\": \"web\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "End Session",
+                                      "description":  "",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json",
+                                                                         "type":  "text"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{token}}",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "http://localhost:5050/v1/api/session/end",
+                                                                  "protocol":  "http",
+                                                                  "host":  [
+                                                                               "localhost"
+                                                                           ],
+                                                                  "port":  "5050",
+                                                                  "path":  [
+                                                                               "v1",
+                                                                               "api",
+                                                                               "session",
+                                                                               "end"
+                                                                           ]
+                                                              },
+                                                      "description":  "",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"sessionId\": \"abc123\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Heartbeat",
+                                      "description":  "",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{token}}",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "http://localhost:5050/v1/api/session/heartbeat",
+                                                                  "protocol":  "http",
+                                                                  "host":  [
+                                                                               "localhost"
+                                                                           ],
+                                                                  "port":  "5050",
+                                                                  "path":  [
+                                                                               "v1",
+                                                                               "api",
+                                                                               "session",
+                                                                               "heartbeat"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "sessionId",
+                                                                                    "value":  "abc123",
+                                                                                    "disabled":  false,
+                                                                                    "description":  "Type: string"
+                                                                                }
+                                                                            ]
+                                                              },
+                                                      "description":  ""
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 }
+             ]
+}

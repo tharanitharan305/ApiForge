@@ -108,5 +108,19 @@ export const api = {
       );
       return data;
     },
+    exportPostman: async (projectId: string) => {
+      const { data } = await apiClient.post(
+        `/projects/${projectId}/export/postman`
+      );
+      return data;
+    },
+  },
+  import: {
+    postman: async (file: File) => {
+      const text = await file.text();
+      const collection = JSON.parse(text);
+      const { data } = await apiClient.post("/import/postman", { collection });
+      return data;
+    },
   },
 };
