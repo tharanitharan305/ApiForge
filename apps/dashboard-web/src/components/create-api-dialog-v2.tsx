@@ -181,13 +181,21 @@ export function CreateApiDialog({
     const queryParams = (data.queryParams || []).filter(param => param.key);
     const requestBody = (data.requestBody || []).filter(field => field.key);
     
-    // Submit cleaned data
-    onSubmit({
-      ...data,
-      headers,
+    // Submit cleaned data with proper typing
+    const submitData: ApiSubmitData = {
+      name: data.name,
+      description: data.description,
+      endpoint: data.endpoint,
+      method: data.method,
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
       queryParams,
       requestBody,
-    });
+      responseMapping: data.responseMapping,
+      timeout: data.timeout,
+      authRequired: data.authRequired,
+    };
+    
+    onSubmit(submitData);
     reset();
   };
 
