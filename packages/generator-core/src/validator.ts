@@ -11,12 +11,22 @@ export interface ValidationResult {
   };
 }
 
+export interface CorruptionCheckResult {
+  hasCorruption: boolean;
+  issues: {
+    type: 'raw_boolean' | 'unresolved_template' | 'undefined_variable' | 'wrong_extension' | 'missing_code';
+    message: string;
+    line?: number;
+    snippet?: string;
+  }[];
+}
+
 /**
  * Validates generated SDK files before export
  */
 export class GeneratorValidator {
   /**
-   * Validate all generated files
+   * Comprehensive validation including corruption detection
    */
   static validate(files: GeneratedFile[]): ValidationResult {
     const errors: string[] = [];
@@ -61,6 +71,14 @@ export class GeneratorValidator {
         errors.push(`Missing language for file: ${file.filename}`);
       }
 
+      // CRITICAL: Check for corruption
+      const corruptionCheck = this.detectCorruption(file);
+      if (corruptionCheck.hasCorruption) {
+        for (const issue of corruptionCheck.issues) {
+          errors.push(`${file.filename}: ${issue.type} - ${issue.message}${issue.snippet ? `\n  Snippet: ${issue.snippet}` : ''}`);
+        }
+      }
+
       // Language-specific validation
       this.validateLanguageSyntax(file, errors, warnings);
     }
@@ -72,6 +90,100 @@ export class GeneratorValidator {
       errors,
       warnings,
       stats,
+    };
+  }
+
+  /**
+   * Detect corruption in generated files
+   * This is the CRITICAL validation that prevents corrupted exports
+   */
+  static detectCorruption(file: GeneratedFile): CorruptionCheckResult {
+    const issues: CorruptionCheckResult['issues'] = [];
+    const lines = file.content.split('\n');
+
+    // 1. Check for raw boolean leakage (truefalsefalse pattern)
+    const rawBooleanPattern = /\b(true|false|null|undefined)\s*(true|false|null|undefined)/gi;
+    lines.forEach((line, idx) => {
+      const match = line.match(rawBooleanPattern);
+      if (match) {
+        issues.push({
+          type: 'raw_boolean',
+          message: `Raw boolean values leaked into code`,
+          line: idx + 1,
+          snippet: line.trim().substring(0, 80),
+        });
+      }
+    });
+
+    // 2. Check for unresolved Handlebars templates
+    const unresolvedTemplatePattern = /\{\{[^}]+\}\}/g;
+    lines.forEach((line, idx) => {
+      const match = line.match(unresolvedTemplatePattern);
+      if (match) {
+        issues.push({
+          type: 'unresolved_template',
+          message: `Unresolved template variable: ${match[0]}`,
+          line: idx + 1,
+          snippet: line.trim().substring(0, 80),
+        });
+      }
+    });
+
+    // 3. Check for undefined variable usage (language-specific)
+    if (file.language === 'dart') {
+      // Check for 'response' usage without definition
+      const hasResponseUsage = file.content.includes('return ApiResponse.fromResponse(\n  response,') ||
+                               file.content.includes('return ApiResponse.fromResponse(response,');
+      const hasResponseDefinition = file.content.includes('final response = await') ||
+                                    file.content.includes('var response = await');
+      
+      if (hasResponseUsage && !hasResponseDefinition) {
+        issues.push({
+          type: 'undefined_variable',
+          message: `Variable 'response' used but never defined`,
+        });
+      }
+
+      // Check for missing HTTP request generation
+      if (file.filename.startsWith('collections/')) {
+        const hasHttpMethod = /await _client\.(get|post|put|patch|delete)\(/.test(file.content);
+        if (!hasHttpMethod && file.content.includes('static Future<ApiResponse')) {
+          issues.push({
+            type: 'missing_code',
+            message: `HTTP request generation missing in collection method`,
+          });
+        }
+      }
+    }
+
+    if (file.language === 'typescript') {
+      // Check for 'response' usage without definition
+      const hasResponseUsage = file.content.includes('normalizeResponse(response)');
+      const hasResponseDefinition = file.content.includes('response = await ApiClient.');
+      
+      if (hasResponseUsage && !hasResponseDefinition) {
+        issues.push({
+          type: 'undefined_variable',
+          message: `Variable 'response' used but never defined`,
+        });
+      }
+    }
+
+    // 4. Check for wrong file extension (TypeScript should be .tsx for collections/models)
+    if (file.language === 'typescript') {
+      // Collections and models should be .tsx, core files can be .ts
+      if ((file.filename.startsWith('collections/') || file.filename.startsWith('models/')) && 
+          file.filename.endsWith('.ts') && !file.filename.endsWith('.tsx')) {
+        issues.push({
+          type: 'wrong_extension',
+          message: `TypeScript collection/model file should use .tsx extension, got .ts`,
+        });
+      }
+    }
+
+    return {
+      hasCorruption: issues.length > 0,
+      issues,
     };
   }
 

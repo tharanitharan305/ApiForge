@@ -35,15 +35,46 @@ export class ExportService {
 
     // Generate code for each language
     for (const language of languages) {
+      console.log(`[ExportService] ========================================`);
+      console.log(`[ExportService] Generating SDK for language: ${language}`);
+      console.log(`[ExportService] Project:`, project.name);
+      console.log(`[ExportService] Collections count:`, collections.length);
+      
       const files = await this.generatorService.generateForLanguage(
         language,
         project,
         collections,
       );
 
+      console.log(`[ExportService] Generated ${files.length} files for ${language}`);
+      console.log(`[ExportService] File list:`, files.map(f => f.filename));
+
+      // Log first collection file content for debugging
+      const collectionFile = files.find(f => f.filename.startsWith('collections/'));
+      if (collectionFile) {
+        console.log(`[ExportService] Sample collection file (${collectionFile.filename}):`);
+        console.log(`[ExportService] Content preview (first 800 chars):`);
+        console.log(collectionFile.content.substring(0, 800));
+        console.log(`[ExportService] Content preview (last 300 chars):`);
+        console.log(collectionFile.content.substring(collectionFile.content.length - 300));
+      }
+
       // Validate generated files
+      console.log(`[ExportService] Running validation for ${language}...`);
       const validation = GeneratorValidator.validate(files);
       const structureValidation = GeneratorValidator.validateCollectionStructure(files);
+
+      console.log(`[ExportService] Validation result for ${language}:`, {
+        valid: validation.valid,
+        errors: validation.errors,
+        warnings: validation.warnings,
+        stats: validation.stats,
+      });
+      console.log(`[ExportService] Structure validation result for ${language}:`, {
+        valid: structureValidation.valid,
+        errors: structureValidation.errors,
+        warnings: structureValidation.warnings,
+      });
 
       // Collect errors and warnings
       if (!validation.valid) {
@@ -58,6 +89,9 @@ export class ExportService {
 
       // If validation failed, throw error with details
       if (!validation.valid || !structureValidation.valid) {
+        console.error(`[ExportService] ❌ Validation FAILED for ${language}. Blocking export.`);
+        console.error(`[ExportService] All errors:`, allValidationErrors);
+        console.error(`[ExportService] All warnings:`, allValidationWarnings);
         throw new BadRequestException({
           message: 'SDK generation validation failed',
           errors: allValidationErrors,
@@ -66,12 +100,16 @@ export class ExportService {
         });
       }
 
+      console.log(`[ExportService] ✅ Validation PASSED for ${language}. Adding files to ZIP.`);
+
       files.forEach((file) => {
         zipFiles.push({
           path: `${language}/${file.filename}`,
           content: file.content,
         });
       });
+      
+      console.log(`[ExportService] ========================================`);
     }
 
     // Add config.json

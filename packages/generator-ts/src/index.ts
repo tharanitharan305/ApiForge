@@ -24,7 +24,7 @@ const findProjectRoot = () => {
 
 export class TypeScriptGenerator extends BaseGenerator {
   language = 'typescript';
-  fileExtension = 'ts';
+  fileExtension = 'tsx'; // Changed from 'ts' to 'tsx'
 
   private collectionTemplate: string;
   private modelsTemplate: string;
@@ -101,7 +101,7 @@ export class TypeScriptGenerator extends BaseGenerator {
   async generateCore(project: any): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];
 
-    // API Client
+    // API Client - use .ts for core files
     const apiClientContent = this.renderTemplate(this.apiClientTemplate, { project });
     files.push({
       filename: 'core/api_client.ts',
@@ -109,7 +109,7 @@ export class TypeScriptGenerator extends BaseGenerator {
       language: this.language,
     });
 
-    // API Response
+    // API Response - use .ts for core files
     const apiResponseContent = this.renderTemplate(this.apiResponseTemplate, { project });
     files.push({
       filename: 'core/api_response.ts',
@@ -126,6 +126,7 @@ export class TypeScriptGenerator extends BaseGenerator {
   async generateIndex(collections: any[]): Promise<GeneratedFile> {
     const content = this.renderTemplate(this.indexTemplate, { collections });
 
+    // Index file uses .ts
     return {
       filename: 'index.ts',
       content,

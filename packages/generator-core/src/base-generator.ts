@@ -32,10 +32,41 @@ export abstract class BaseGenerator implements GeneratorPlugin {
     this.handlebars.registerHelper('uppercase', (str: string) => str.toUpperCase());
     this.handlebars.registerHelper('lowercase', (str: string) => str.toLowerCase());
     
-    // Comparison helpers - inline form only
-    this.handlebars.registerHelper('eq', (a: any, b: any) => a === b);
-    this.handlebars.registerHelper('or', (a: any, b: any) => a || b);
-    this.handlebars.registerHelper('and', (a: any, b: any) => a && b);
+    // Comparison helpers - BLOCK FORM for conditionals
+    this.handlebars.registerHelper('eq', function(this: any, a: any, b: any, options: any) {
+      console.log('[Handlebars eq] Called with:', { a, b, hasOptions: !!options, hasFn: !!(options && options.fn) });
+      // Block helper form: {{#eq a b}}...{{/eq}}
+      if (options && options.fn) {
+        const result = a === b;
+        console.log('[Handlebars eq] Block form, comparison result:', result);
+        return result ? options.fn(this) : options.inverse(this);
+      }
+      // Inline form: {{eq a b}} - should NOT be used in templates
+      console.log('[Handlebars eq] WARNING: Inline form used (returns boolean)');
+      return a === b;
+    });
+    
+    this.handlebars.registerHelper('or', function(this: any, a: any, b: any, options: any) {
+      console.log('[Handlebars or] Called with:', { a, b, hasOptions: !!options, hasFn: !!(options && options.fn) });
+      if (options && options.fn) {
+        const result = a || b;
+        console.log('[Handlebars or] Block form, result:', result);
+        return result ? options.fn(this) : options.inverse(this);
+      }
+      console.log('[Handlebars or] WARNING: Inline form used (returns boolean)');
+      return a || b;
+    });
+    
+    this.handlebars.registerHelper('and', function(this: any, a: any, b: any, options: any) {
+      console.log('[Handlebars and] Called with:', { a, b, hasOptions: !!options, hasFn: !!(options && options.fn) });
+      if (options && options.fn) {
+        const result = a && b;
+        console.log('[Handlebars and] Block form, result:', result);
+        return result ? options.fn(this) : options.inverse(this);
+      }
+      console.log('[Handlebars and] WARNING: Inline form used (returns boolean)');
+      return a && b;
+    });
     
     // Type mapping helper for cleaner templates
     this.handlebars.registerHelper('tsType', (type: string) => {

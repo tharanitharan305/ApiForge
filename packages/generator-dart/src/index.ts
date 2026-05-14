@@ -36,10 +36,14 @@ export class DartGenerator extends BaseGenerator {
     const projectRoot = findProjectRoot();
     const templatesPath = join(projectRoot, 'templates/dart');
     
-    this.collectionTemplate = readFileSync(
-      join(templatesPath, 'collection.hbs'),
-      'utf-8',
-    );
+    console.log('[DartGenerator] Loading templates from:', templatesPath);
+    
+    const collectionTemplatePath = join(templatesPath, 'collection.hbs');
+    console.log('[DartGenerator] Collection template path:', collectionTemplatePath);
+    
+    this.collectionTemplate = readFileSync(collectionTemplatePath, 'utf-8');
+    console.log('[DartGenerator] Collection template loaded, length:', this.collectionTemplate.length);
+    
     this.modelsTemplate = readFileSync(
       join(templatesPath, 'models.hbs'),
       'utf-8',
@@ -62,12 +66,53 @@ export class DartGenerator extends BaseGenerator {
    * Generate a single collection file with all its APIs as methods
    */
   async generateCollection(collection: any, project: any): Promise<GeneratedFile> {
+    console.log('[DartGenerator] ========================================');
+    console.log('[DartGenerator] Generating collection:', collection.name);
+    console.log('[DartGenerator] Collection data:', JSON.stringify(collection, null, 2));
+    console.log('[DartGenerator] Template length:', this.collectionTemplate.length);
+    console.log('[DartGenerator] Template preview (first 300 chars):', this.collectionTemplate.substring(0, 300));
+    
     const content = this.renderTemplate(this.collectionTemplate, {
       ...collection,
       project,
     });
     
+    console.log('[DartGenerator] ========================================');
+    console.log('[DartGenerator] GENERATED CONTENT (FULL):');
+    console.log(content);
+    console.log('[DartGenerator] ========================================');
+    console.log('[DartGenerator] Content length:', content.length);
+    console.log('[DartGenerator] Checking for corruption patterns...');
+    
+    // Check for corruption
+    const hasBooleanLeakage = content.includes('truefalse') || content.match(/\b(true|false)\s*(true|false)/);
+    const hasUnresolvedTemplates = content.match(/\{\{[^}]+\}\}/);
+    const hasResponseVariable = content.includes('final response = await');
+    const hasResponseUsage = content.includes('return ApiResponse');
+    
+    console.log('[DartGenerator] Corruption check results:');
+    console.log('  - Boolean leakage:', hasBooleanLeakage ? 'YES - CORRUPTED!' : 'No');
+    console.log('  - Unresolved templates:', hasUnresolvedTemplates ? 'YES - CORRUPTED!' : 'No');
+    console.log('  - Has response variable:', hasResponseVariable ? 'Yes' : 'NO - MISSING!');
+    console.log('  - Has response usage:', hasResponseUsage ? 'Yes' : 'No');
+    
+    if (hasBooleanLeakage) {
+      console.error('[DartGenerator] ❌ CORRUPTION DETECTED: Boolean leakage found in generated content!');
+      const matches = content.match(/\b(true|false)\s*(true|false)/g);
+      console.error('[DartGenerator] Boolean leakage matches:', matches);
+    }
+    if (hasUnresolvedTemplates) {
+      console.error('[DartGenerator] ❌ CORRUPTION DETECTED: Unresolved template variables found!');
+      const matches = content.match(/\{\{[^}]+\}\}/g);
+      console.error('[DartGenerator] Unresolved templates:', matches);
+    }
+    if (!hasResponseVariable && hasResponseUsage) {
+      console.error('[DartGenerator] ❌ CORRUPTION DETECTED: Response variable used but not defined!');
+    }
+    
     const filename = `collections/${this.getCollectionFilename(collection.name)}`;
+    console.log('[DartGenerator] Output filename:', filename);
+    console.log('[DartGenerator] ========================================');
 
     return {
       filename,
